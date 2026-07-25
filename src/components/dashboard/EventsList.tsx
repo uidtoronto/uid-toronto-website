@@ -3,14 +3,18 @@ import type { MemberEvent } from '../../types';
 
 interface EventsListProps {
   events: MemberEvent[];
+  emptyMessage?: string;
 }
 
-export default function EventsList({ events }: EventsListProps) {
+export default function EventsList({ events, emptyMessage = 'No upcoming events at this time.' }: EventsListProps) {
   return (
     <div style={{ background: '#fff', borderRadius: '20px', padding: '1.75rem', border: '1px solid rgba(13,77,124,0.08)', boxShadow: '0 8px 32px rgba(13,77,124,0.06)' }}>
       <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', fontWeight: 500, color: 'var(--uid-navy)', margin: '0 0 1.25rem' }}>
         <em>Upcoming Events</em>
       </h3>
+      {events.length === 0 ? (
+        <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-soft)' }}>{emptyMessage}</p>
+      ) : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {events.map(ev => {
           const d = new Date(ev.date);
@@ -19,6 +23,9 @@ export default function EventsList({ events }: EventsListProps) {
               onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(13,77,124,0.08)'; }}
               onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
             >
+              {ev.image_url && (
+                <img src={ev.image_url} alt="" style={{ width: '72px', height: '72px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0 }} />
+              )}
               {/* Date block */}
               <div style={{ flexShrink: 0, width: '56px', textAlign: 'center', padding: '0.5rem 0', borderRadius: '12px', background: 'linear-gradient(160deg, #0D4D7C, #1A6A9A)', color: '#fff' }}>
                 <p style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '1px', margin: 0, opacity: 0.7, fontFamily: "'DM Sans', sans-serif" }}>
@@ -45,6 +52,7 @@ export default function EventsList({ events }: EventsListProps) {
           );
         })}
       </div>
+      )}
     </div>
   );
 }

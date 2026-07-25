@@ -78,6 +78,33 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
 );
 SelectField.displayName = 'SelectField';
 
+interface TextAreaFieldProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label: string;
+  error?: string;
+}
+
+export const TextAreaField = forwardRef<HTMLTextAreaElement, TextAreaFieldProps>(
+  ({ label, error, ...rest }, ref) => (
+    <label style={{ display: 'block', marginBottom: '1rem' }}>
+      <span style={{ display: 'block', fontFamily: "'DM Sans', sans-serif", fontSize: '12.5px', fontWeight: 600, color: 'var(--text-mid)', marginBottom: '0.375rem' }}>
+        {label}
+      </span>
+      <textarea
+        ref={ref}
+        style={{
+          ...baseField,
+          minHeight: '96px',
+          resize: 'vertical' as const,
+          borderColor: error ? 'rgba(220,38,38,0.4)' : baseField.borderColor,
+        }}
+        {...rest}
+      />
+      {error && <span style={{ display: 'block', marginTop: '0.25rem', fontSize: '12px', color: '#dc2626', fontFamily: "'DM Sans', sans-serif" }}>{error}</span>}
+    </label>
+  ),
+);
+TextAreaField.displayName = 'TextAreaField';
+
 // ── Status badge ──
 export function StatusBadge({ status }: { status: MemberStatus }) {
   const s = statusStyle(status);

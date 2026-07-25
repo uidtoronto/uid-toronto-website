@@ -11,6 +11,7 @@ const translations = {
       join: 'Üye Ol',
       login: 'Giriş Yap',
       contact: 'İletişim',
+      donate: 'Bağış Yap',
     },
     hero: {
       badge: 'Uluslararası Demokratlar Birliği — Toronto',
@@ -18,6 +19,7 @@ const translations = {
       subtitle: "UID Toronto, Kanada'da yaşayan Türk toplumunun sosyal, kültürel ve sivil hayata katılımını desteklemekte; toplumumuzun birlik, dayanışma ve temsil gücünü artırmaya yönelik çalışmalar yürütmektedir.",
       ctaPrimary: 'Üye Ol / Become a Member',
       ctaSecondary: "UID Toronto'yu Keşfet",
+      ctaDonate: 'Bağış Yap / Donate',
     },
     mission: {
       tag: 'DEĞERLER & HEDEFLER',
@@ -134,6 +136,21 @@ const translations = {
       readMore: 'Devamını Oku',
       filterAll: 'Tümü / All',
     },
+    donate: {
+      tag: 'DESTEK',
+      heading: 'UID Toronto\'ya Bağış Yapın',
+      subtitle: 'Bağışlarınız; etkinlikler, gençlik projeleri ve toplum çalışmalarımızın sürdürülmesine katkı sağlar.',
+      amountLabel: 'Bağış Tutarı Seçin',
+      customLabel: 'Özel tutar (CAD)',
+      minNote: 'Minimum bağış: $5.00 CAD',
+      minError: 'Minimum bağış tutarı $5.00 CAD\'dir.',
+      continue: 'Bağışa Devam Et',
+      checkoutTitle: 'Bağışınızı Tamamlayın',
+      checkoutSubtitle: '{amount} tutarındaki bağışınız için güvenli ödeme bilgilerinizi girin.',
+      trustItems: ['Stripe ile güvenli ödeme', 'Anında teşekkür', 'Topluma doğrudan katkı'],
+      successTitle: 'Teşekkür Ederiz!',
+      successMessage: 'Cömert bağışınız UID Toronto\'nun toplum çalışmalarına destek olacaktır.',
+    },
   },
   EN: {
     nav: {
@@ -143,6 +160,7 @@ const translations = {
       join: 'Join',
       login: 'Log In',
       contact: 'Contact',
+      donate: 'Donate',
     },
     hero: {
       badge: 'Union of International Democrats — Toronto',
@@ -150,6 +168,7 @@ const translations = {
       subtitle: "UID Toronto supports the Turkish community in Canada in participating in social, cultural, and civic life, working to strengthen our community's unity, solidarity, and representation.",
       ctaPrimary: 'Become a Member / Üye Ol',
       ctaSecondary: 'Discover UID Toronto',
+      ctaDonate: 'Donate / Bağış Yap',
     },
     mission: {
       tag: 'VALUES & GOALS',
@@ -265,6 +284,21 @@ const translations = {
       sub: 'All events, programs, and projects carried out for community, culture, and democracy.',
       readMore: 'Read More',
       filterAll: 'All / Tümü',
+    },
+    donate: {
+      tag: 'SUPPORT',
+      heading: 'Donate to UID Toronto',
+      subtitle: 'Your donation helps sustain our events, youth programs, and community initiatives.',
+      amountLabel: 'Choose Donation Amount',
+      customLabel: 'Custom amount (CAD)',
+      minNote: 'Minimum donation: $5.00 CAD',
+      minError: 'Minimum donation amount is $5.00 CAD.',
+      continue: 'Continue to Donate',
+      checkoutTitle: 'Complete Your Donation',
+      checkoutSubtitle: 'Enter your secure payment details for your {amount} donation.',
+      trustItems: ['Secure payment via Stripe', 'Instant gratitude', 'Direct community impact'],
+      successTitle: 'Thank You!',
+      successMessage: 'Your generous donation will support UID Toronto\'s community work.',
     },
   },
 } as const;

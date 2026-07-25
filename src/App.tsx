@@ -23,6 +23,11 @@ import AuthGuard from './components/auth/AuthGuard';
 import SuperAdminGuard from './components/auth/SuperAdminGuard';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminNews from './pages/admin/AdminNews';
+import AdminEvents from './pages/admin/AdminEvents';
+import AdminMembers from './pages/admin/AdminMembers';
+import AdminDonations from './pages/admin/AdminDonations';
+import Donate from './pages/Donate';
 
 function AppRoutes() {
   return (
@@ -35,6 +40,7 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/membership" element={<Membership />} />
+      <Route path="/donate" element={<><Navbar /><Donate /></>} />
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/payment-cancelled" element={<PaymentCancelled />} />
       <Route path="/pricing" element={<PricingPage />} />
@@ -44,6 +50,10 @@ function AppRoutes() {
       {/* Super Admin dashboard */}
       <Route path="/admin" element={<SuperAdminGuard><AdminLayout /></SuperAdminGuard>}>
         <Route index element={<AdminDashboard />} />
+        <Route path="news" element={<AdminNews />} />
+        <Route path="events" element={<AdminEvents />} />
+        <Route path="members" element={<AdminMembers />} />
+        <Route path="donations" element={<AdminDonations />} />
       </Route>
       <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
 

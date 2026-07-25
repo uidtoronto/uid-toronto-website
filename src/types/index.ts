@@ -54,6 +54,78 @@ export interface MemberNews {
   image_url?: string | null;
 }
 
+export type PublishStatus = 'draft' | 'published';
+
+export interface NewsPost {
+  id: string;
+  title_en: string;
+  title_tr: string;
+  excerpt_en: string;
+  excerpt_tr: string;
+  body_en: string | null;
+  body_tr: string | null;
+  image_url: string | null;
+  is_published: boolean;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NewsPostInput {
+  title_en: string;
+  title_tr: string;
+  excerpt_en: string;
+  excerpt_tr: string;
+  body_en?: string;
+  body_tr?: string;
+  image_url?: string | null;
+  is_published: boolean;
+}
+
+export interface EventRecord {
+  id: string;
+  title_en: string;
+  title_tr: string;
+  description_en: string;
+  description_tr: string;
+  event_date: string;
+  event_time: string;
+  location: string;
+  image_url: string | null;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventInput {
+  title_en: string;
+  title_tr: string;
+  description_en: string;
+  description_tr: string;
+  event_date: string;
+  event_time: string;
+  location: string;
+  image_url?: string | null;
+  is_published: boolean;
+}
+
+export interface MemberUpdateInput {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string | null;
+  mobile_phone?: string | null;
+  city?: string | null;
+  status?: MemberStatus;
+  membership_type?: RegistrationMembershipType | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  province?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+  profile_photo_url?: string | null;
+}
+
 export interface AuthSession {
   user: Profile | null;
   isAuthenticated: boolean;
@@ -111,6 +183,7 @@ export interface Member {
   renewal_date?: string | null;
   last_payment_date?: string | null;
   auth_user_id?: string | null;
+  profile_photo_url?: string | null;
   updated_at?: string;
   family_members?: FamilyMember[];
 }
@@ -138,4 +211,18 @@ export interface RegistrationInput {
   membership_type: RegistrationMembershipType;
   is_family: boolean;
   family_members?: FamilyMember[];
+}
+
+export interface Donation {
+  id: string;
+  amount: number;
+  email: string | null;
+  stripe_payment_intent_id: string;
+  stripe_checkout_session_id: string | null;
+  created_at: string;
+}
+
+export interface DonationStats {
+  totalCount: number;
+  totalAmountCents: number;
 }

@@ -3,6 +3,7 @@ import type {
   Member,
   MemberStats,
   MemberStatus,
+  MemberUpdateInput,
   PaymentStatus,
   RegistrationMembershipType,
 } from '../types';
@@ -53,4 +54,29 @@ export async function getMemberStats(): Promise<{ data: MemberStats | null; erro
   const activeSubscriptions = byPaymentStatus.find(p => p.status === 'active')?.count ?? 0;
 
   return { data: { total: total.count ?? 0, byStatus, byMembershipType, byPaymentStatus, activeSubscriptions }, error: null };
+}
+
+export async function getAllMembers(): Promise<{ data: Member[]; error: string | null }> {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) return { data: [], error: error.message };
+  return { data: (data as Member[]) ?? [], error: null };
+}
+
+export async function getMemberById(id: string): Promise<{ data: Member | null; error: string | null }> {
+  const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).maybeSingle();
+  if (error) return { data: null, error: error.message };
+  return { data: data as Member | null, error: null };
+}
+
+export async function updateMember(
+  id: string,
+  updates: MemberUpdateInput,
+): Promise<{ data: Member | null; error: string | null }> {
+  const { data, error } = await supabase.from(TABLE).update(updates).eq('id', id).select('*').single();
+  if (error) return { data: null, error: error.message };
+  return { data: data as Member, error: null };
 }

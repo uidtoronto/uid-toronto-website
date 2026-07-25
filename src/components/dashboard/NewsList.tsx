@@ -3,23 +3,31 @@ import type { MemberNews } from '../../types';
 
 interface NewsListProps {
   news: MemberNews[];
+  emptyMessage?: string;
 }
 
-export default function NewsList({ news }: NewsListProps) {
+export default function NewsList({ news, emptyMessage = 'No news articles at this time.' }: NewsListProps) {
   return (
     <div style={{ background: '#fff', borderRadius: '20px', padding: '1.75rem', border: '1px solid rgba(13,77,124,0.08)', boxShadow: '0 8px 32px rgba(13,77,124,0.06)' }}>
       <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', fontWeight: 500, color: 'var(--uid-navy)', margin: '0 0 1.25rem' }}>
         <em>Recent News</em>
       </h3>
+      {news.length === 0 ? (
+        <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-soft)' }}>{emptyMessage}</p>
+      ) : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
         {news.map(n => (
           <div key={n.id} style={{ display: 'flex', gap: '12px', padding: '1rem', borderRadius: '14px', background: 'var(--off-white)', border: '1px solid rgba(13,77,124,0.05)', cursor: 'pointer', transition: 'transform 0.3s, box-shadow 0.3s, border-color 0.3s' }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(13,77,124,0.08)'; e.currentTarget.style.borderColor = 'rgba(62,200,200,0.25)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; e.currentTarget.style.borderColor = 'rgba(13,77,124,0.05)'; }}
           >
+            {n.image_url ? (
+              <img src={n.image_url} alt="" style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }} />
+            ) : (
             <div style={{ flexShrink: 0, width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(62,200,200,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Newspaper size={16} color="var(--uid-teal-dark)" />
             </div>
+            )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: '14.5px', fontWeight: 500, color: 'var(--uid-navy)', margin: '0 0 4px', fontFamily: "'DM Sans', sans-serif" }}>{n.title}</p>
               <p style={{ fontSize: '13px', color: 'var(--text-mid)', fontWeight: 300, margin: '0 0 4px', lineHeight: 1.5, fontFamily: "'DM Sans', sans-serif" }}>{n.excerpt}</p>
@@ -30,6 +38,7 @@ export default function NewsList({ news }: NewsListProps) {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

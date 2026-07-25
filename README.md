@@ -1,3 +1,18 @@
-# uidweb
+# UID Toronto Website
 
-[![Open in Bolt](https://bolt.new/static/open-in-bolt.svg)](https://bolt.new/~/sb1-fyje2igj)
+Official website for UID Toronto (Union of International Democrats — Canada Toronto chapter).
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+## Build
+
+```bash
+npm run build
+```
+
+Output is written to `dist/`.

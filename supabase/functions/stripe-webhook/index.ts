@@ -75,6 +75,13 @@ async function handleEvent(event: Stripe.Event) {
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  const checkoutType = session.metadata?.checkout_type ?? null;
+
+  if (checkoutType === 'donation') {
+    await handleDonationCompleted(session);
+    return;
+  }
+
   const customerId = typeof session.customer === 'string' ? session.customer : session.customer?.id;
   if (!customerId) {
     console.error('checkout.session.completed: no customer id');
@@ -349,6 +356,44 @@ async function syncAuthMembershipMetadata(userId: string, subscription: Stripe.S
   if (error) {
     console.error(`Failed to update auth metadata for user ${userId}:`, error);
   }
+}
+
+async function handleDonationCompleted(session: Stripe.Checkout.Session) {
+  if (session.mode !== 'payment' || session.payment_status !== 'paid') {
+    console.info('Donation checkout not paid yet, skipping record.');
+    return;
+  }
+
+  const paymentIntentId =
+    typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent?.id ?? '';
+
+  if (!paymentIntentId) {
+    console.error('Donation checkout completed without payment_intent id');
+    return;
+  }
+
+  const email =
+    session.customer_details?.email ?? session.customer_email ?? null;
+
+  const { error } = await supabase.from('donations').insert({
+    amount: session.amount_total ?? 0,
+    email,
+    stripe_payment_intent_id: paymentIntentId,
+    stripe_checkout_session_id: session.id,
+  });
+
+  if (error) {
+    if (error.code === '23505') {
+      console.info(`Donation ${paymentIntentId} already recorded.`);
+      return;
+    }
+    console.error('Failed to record donation:', error);
+    return;
+  }
+
+  console.info(`Recorded donation ${paymentIntentId} for ${session.amount_total ?? 0} cents CAD.`);
 }
 
 async function confirmPaidUserEmail(userId: string) {

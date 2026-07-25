@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { LayoutDashboard, LogOut, Menu, X, UserCircle } from 'lucide-react';
+import { LayoutDashboard, LogOut, Menu, X, UserCircle, Newspaper, Calendar, Users, Heart } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
@@ -19,6 +19,14 @@ export default function AdminLayout() {
     navigate('/login');
   };
 
+  const navItems = [
+    { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+    { to: '/admin/news', label: 'News', icon: Newspaper },
+    { to: '/admin/events', label: 'Events', icon: Calendar },
+    { to: '/admin/members', label: 'Members', icon: Users },
+    { to: '/admin/donations', label: 'Donations', icon: Heart },
+  ];
+
   const SidebarContent = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ padding: '1.5rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -33,21 +41,27 @@ export default function AdminLayout() {
       </div>
 
       <nav style={{ flex: 1, padding: '1rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <Link
-          to="/admin"
-          style={{
-            display: 'flex', alignItems: 'center', gap: '0.75rem',
-            padding: '0.75rem 0.875rem', borderRadius: '10px',
-            fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 500,
-            textDecoration: 'none',
-            color: '#fff',
-            background: 'linear-gradient(135deg, rgba(62,200,200,0.18), rgba(26,106,154,0.18))',
-            border: '1px solid rgba(62,200,200,0.25)',
-          }}
-        >
-          <LayoutDashboard size={18} />
-          Dashboard
-        </Link>
+        {navItems.map(({ to, label, icon: Icon, end }) => {
+          const active = end ? location.pathname === to : location.pathname.startsWith(to);
+          return (
+            <Link
+              key={to}
+              to={to}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                padding: '0.75rem 0.875rem', borderRadius: '10px',
+                fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 500,
+                textDecoration: 'none',
+                color: active ? '#fff' : 'rgba(255,255,255,0.7)',
+                background: active ? 'linear-gradient(135deg, rgba(62,200,200,0.18), rgba(26,106,154,0.18))' : 'transparent',
+                border: active ? '1px solid rgba(62,200,200,0.25)' : '1px solid transparent',
+              }}
+            >
+              <Icon size={18} />
+              {label}
+            </Link>
+          );
+        })}
       </nav>
 
       <div style={{ padding: '1rem 0.75rem 1.25rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>

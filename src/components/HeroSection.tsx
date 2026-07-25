@@ -1,4 +1,5 @@
 import { useLang } from '../context/LangContext';
+import { Link } from 'react-router-dom';
 import { CityAndIslamicSkyline, OttomanCorners, FloatingRosettes } from './BackgroundDecor';
 
 const PARTICLES = Array.from({ length: 18 }, (_, i) => ({
@@ -90,6 +91,15 @@ export default function HeroSection() {
           >
             {t.hero.ctaSecondary}
           </button>
+          <Link
+            to="/donate"
+            className="shimmer-btn"
+            style={{ padding: '15px 42px', borderRadius: '32px', fontSize: '15px', fontWeight: 500, background: 'linear-gradient(135deg, var(--uid-teal), var(--uid-mid))', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", textDecoration: 'none', transition: 'transform 0.3s, box-shadow 0.3s' }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 18px 44px rgba(62,200,200,0.32)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
+          >
+            {t.hero.ctaDonate}
+          </Link>
         </div>
 
       </div>

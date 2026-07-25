@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { key: 'byk',     anchor: 'byk'     },
   { key: 'works',   route: '/works'   },
   { key: 'join',    anchor: 'uye'     },
+  { key: 'donate',  route: '/donate' },
   { key: 'contact', anchor: 'iletisim'},
 ] as const;
 
@@ -50,6 +51,7 @@ export default function Navbar() {
     byk:     t.nav.byk,
     works:   t.nav.works,
     join:    t.nav.join,
+    donate:  t.nav.donate,
     contact: t.nav.contact,
   };
 
@@ -134,6 +136,19 @@ export default function Navbar() {
           >
             {lang === 'TR' ? '🇨🇦 EN' : '🇹🇷 TR'}
           </button>
+          <Link
+            to="/donate"
+            style={{
+              padding: '8px 20px', borderRadius: '99px', fontSize: '13.5px', fontWeight: 500,
+              background: 'rgba(62,200,200,0.1)', border: '1.5px solid rgba(62,200,200,0.35)',
+              color: 'var(--uid-navy)', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+              textDecoration: 'none', transition: 'border-color 0.3s, color 0.3s, transform 0.3s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--uid-teal)'; e.currentTarget.style.color = 'var(--uid-teal)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(62,200,200,0.35)'; e.currentTarget.style.color = 'var(--uid-navy)'; e.currentTarget.style.transform = ''; }}
+          >
+            {t.nav.donate}
+          </Link>
           <Link
             to="/login"
             style={{
