@@ -27,6 +27,8 @@ import AdminNews from './pages/admin/AdminNews';
 import AdminEvents from './pages/admin/AdminEvents';
 import AdminMembers from './pages/admin/AdminMembers';
 import AdminDonations from './pages/admin/AdminDonations';
+import AdminBoardMembers from './pages/admin/AdminBoardMembers';
+import AdminProjects from './pages/admin/AdminProjects';
 import Donate from './pages/Donate';
 
 function AppRoutes() {
@@ -53,6 +55,8 @@ function AppRoutes() {
         <Route path="news" element={<AdminNews />} />
         <Route path="events" element={<AdminEvents />} />
         <Route path="members" element={<AdminMembers />} />
+        <Route path="board" element={<AdminBoardMembers />} />
+        <Route path="projects" element={<AdminProjects />} />
         <Route path="donations" element={<AdminDonations />} />
       </Route>
       <Route path="/admin/*" element={<Navigate to="/admin" replace />} />

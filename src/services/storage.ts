@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 
-export type StorageBucket = 'news-images' | 'event-images' | 'member-photos';
+export type StorageBucket = 'news-images' | 'event-images' | 'member-photos' | 'board-photos' | 'project-images';
 
 export async function uploadCmsImage(
   bucket: StorageBucket,

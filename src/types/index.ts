@@ -226,3 +226,75 @@ export interface DonationStats {
   totalCount: number;
   totalAmountCents: number;
 }
+
+// ───────────────────────────────────────────────────────────
+// Board Members & Projects CMS
+// ───────────────────────────────────────────────────────────
+
+export interface BoardMember {
+  id: string;
+  name_en: string;
+  name_tr: string;
+  description_en: string;
+  description_tr: string;
+  position_en: string;
+  position_tr: string;
+  photo_url: string | null;
+  is_featured: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BoardMemberInput {
+  name_en: string;
+  name_tr: string;
+  description_en?: string;
+  description_tr?: string;
+  position_en: string;
+  position_tr: string;
+  photo_url?: string | null;
+  is_featured: boolean;
+  sort_order: number;
+}
+
+export interface Project {
+  id: string;
+  title_en: string;
+  title_tr: string;
+  description_en: string;
+  description_tr: string;
+  cover_image_url: string | null;
+  gallery_urls: string[];
+  project_date: string;
+  category_en: string;
+  category_tr: string;
+  is_featured: boolean;
+  is_published: boolean;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  youtube_url: string | null;
+  tiktok_url: string | null;
+  website_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProjectInput {
+  title_en: string;
+  title_tr: string;
+  description_en: string;
+  description_tr: string;
+  cover_image_url?: string | null;
+  gallery_urls?: string[];
+  project_date: string;
+  category_en: string;
+  category_tr: string;
+  is_featured: boolean;
+  is_published: boolean;
+  instagram_url?: string | null;
+  facebook_url?: string | null;
+  youtube_url?: string | null;
+  tiktok_url?: string | null;
+  website_url?: string | null;
+}

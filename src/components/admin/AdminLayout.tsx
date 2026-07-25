@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { LayoutDashboard, LogOut, Menu, X, UserCircle, Newspaper, Calendar, Users, Heart } from 'lucide-react';
+import { LayoutDashboard, LogOut, Menu, X, UserCircle, Newspaper, Calendar, Users, Heart, UserSquare2, FolderKanban } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
@@ -23,6 +23,8 @@ export default function AdminLayout() {
     { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
     { to: '/admin/news', label: 'News', icon: Newspaper },
     { to: '/admin/events', label: 'Events', icon: Calendar },
+    { to: '/admin/board', label: 'Board', icon: UserSquare2 },
+    { to: '/admin/projects', label: 'Projects', icon: FolderKanban },
     { to: '/admin/members', label: 'Members', icon: Users },
     { to: '/admin/donations', label: 'Donations', icon: Heart },
   ];
