@@ -1,0 +1,75 @@
+import { useState, useCallback } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { LangProvider } from './context/LangContext';
+import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+import ErrorBoundary from './components/ErrorBoundary';
+import LoadingScreen from './components/LoadingScreen';
+import Navbar from './components/Navbar';
+import Home from './pages/Home';
+import Works from './pages/Works';
+import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import Membership from './pages/Membership';
+import MembershipRegister from './pages/MembershipRegister';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentCancelled from './pages/PaymentCancelled';
+import Dashboard from './pages/Dashboard';
+import { PricingPage } from './pages/PricingPage';
+import NotFound from './pages/NotFound';
+import Unauthorized from './pages/Unauthorized';
+import AuthGuard from './components/auth/AuthGuard';
+import SuperAdminGuard from './components/auth/SuperAdminGuard';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<><Navbar /><Home /></>} />
+      <Route path="/works" element={<Works />} />
+      <Route path="/signup" element={<Navigate to="/register" replace />} />
+      <Route path="/register" element={<MembershipRegister />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/membership" element={<Membership />} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
+      <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+      <Route path="/pricing" element={<PricingPage />} />
+      <Route path="/unauthorized" element={<Unauthorized />} />
+      <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
+
+      {/* Super Admin dashboard */}
+      <Route path="/admin" element={<SuperAdminGuard><AdminLayout /></SuperAdminGuard>}>
+        <Route index element={<AdminDashboard />} />
+      </Route>
+      <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  const [loaded, setLoaded] = useState(false);
+  const handleDone = useCallback(() => setLoaded(true), []);
+
+  return (
+    <ErrorBoundary>
+      <LangProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <ToastProvider>
+              {!loaded && <LoadingScreen onDone={handleDone} />}
+              <div style={{ visibility: loaded ? 'visible' : 'hidden' }}>
+                <AppRoutes />
+              </div>
+            </ToastProvider>
+          </BrowserRouter>
+        </AuthProvider>
+      </LangProvider>
+    </ErrorBoundary>
+  );
+}
