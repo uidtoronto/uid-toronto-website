@@ -10,7 +10,8 @@ export interface StripeProduct {
   interval: 'month' | 'year';
   features: string[];
   popular?: boolean;
-  priceId: string;
+  /** Stripe Product ID — resolved to active recurring price server-side at checkout. */
+  productId: string;
 }
 
 export const STRIPE_PRODUCTS: StripeProduct[] = [
@@ -22,7 +23,7 @@ export const STRIPE_PRODUCTS: StripeProduct[] = [
     currencySymbol: 'C$',
     mode: 'subscription',
     interval: 'month',
-    priceId: env.stripePriceMonthly,
+    productId: env.stripeProductMonthly,
     features: [
       'Full UID membership access',
       'Community resources & network',
@@ -39,7 +40,7 @@ export const STRIPE_PRODUCTS: StripeProduct[] = [
     mode: 'subscription',
     interval: 'year',
     popular: true,
-    priceId: env.stripePriceAnnual,
+    productId: env.stripeProductAnnual,
     features: [
       'Everything in Monthly',
       'Priority member support',
@@ -49,15 +50,15 @@ export const STRIPE_PRODUCTS: StripeProduct[] = [
   },
 ];
 
-export function getProductByPriceId(priceId: string): StripeProduct | undefined {
-  return STRIPE_PRODUCTS.find((p) => p.priceId === priceId);
+export function getProductByPlanId(planId: 'monthly' | 'annual'): StripeProduct | undefined {
+  return STRIPE_PRODUCTS.find((p) => p.id === planId);
 }
 
-export function getPriceIdForMembershipType(
+export function getProductIdForMembershipType(
   membershipType: 'adult' | 'student' | 'pensioner',
 ): string {
-  if (membershipType === 'pensioner') return env.stripePriceAnnual;
-  return env.stripePriceMonthly;
+  if (membershipType === 'pensioner') return env.stripeProductAnnual;
+  return env.stripeProductMonthly;
 }
 
 export function getPlanIdForMembershipType(

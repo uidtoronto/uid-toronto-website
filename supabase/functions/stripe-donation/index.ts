@@ -10,15 +10,10 @@ const stripe = new Stripe(stripeSecret, {
 });
 
 const MIN_DONATION_CENTS = 500;
-const donationPriceId = Deno.env.get('STRIPE_DONATION_PRICE_ID') ?? '';
+const donationProductId = Deno.env.get('STRIPE_DONATION_PRODUCT_ID') ?? '';
 
-async function resolveDonationProductId(): Promise<string | null> {
-  if (!donationPriceId.startsWith('price_')) {
-    return null;
-  }
-
-  const price = await stripe.prices.retrieve(donationPriceId);
-  return typeof price.product === 'string' ? price.product : price.product?.id ?? null;
+function resolveDonationProductId(): string | null {
+  return donationProductId.startsWith('prod_') ? donationProductId : null;
 }
 
 function corsResponse(body: string | object | null, status = 200) {
@@ -65,12 +60,12 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Minimum donation is CAD $5.00' }, 400);
     }
 
-    const donationProductId = await resolveDonationProductId();
+    const donationProduct = resolveDonationProductId();
     const priceData: Stripe.Checkout.SessionCreateParams.LineItem.PriceData = {
       currency: 'cad',
       unit_amount: amount_cents,
-      ...(donationProductId
-        ? { product: donationProductId }
+      ...(donationProduct
+        ? { product: donationProduct }
         : {
             product_data: {
               name: 'UID Toronto Donation',

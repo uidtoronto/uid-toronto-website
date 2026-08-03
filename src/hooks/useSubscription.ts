@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { getProductByPriceId, type StripeProduct } from '../stripe-config';
+import { type StripeProduct } from '../stripe-config';
 
 export interface SubscriptionData {
   customer_id: string | null;
@@ -58,9 +58,7 @@ export function useSubscription(): UseSubscriptionReturn {
     subscription?.subscription_status === 'active' ||
     subscription?.subscription_status === 'trialing';
 
-  const product = subscription?.price_id
-    ? getProductByPriceId(subscription.price_id)
-    : undefined;
+  const product: StripeProduct | undefined = undefined;
 
   return {
     subscription,

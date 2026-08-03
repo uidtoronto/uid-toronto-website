@@ -149,33 +149,6 @@ export default function Navbar() {
           >
             {t.nav.donate}
           </Link>
-          <Link
-            to="/login"
-            style={{
-              padding: '8px 20px', borderRadius: '99px', fontSize: '13.5px', fontWeight: 500,
-              background: 'rgba(255,255,255,0.75)', border: '1.5px solid rgba(13,77,124,0.2)',
-              color: 'var(--uid-navy)', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
-              textDecoration: 'none', transition: 'border-color 0.3s, color 0.3s, transform 0.3s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--uid-teal)'; e.currentTarget.style.color = 'var(--uid-teal)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(13,77,124,0.2)'; e.currentTarget.style.color = 'var(--uid-navy)'; e.currentTarget.style.transform = ''; }}
-          >
-            {t.nav.login}
-          </Link>
-          <button
-            className="shimmer-btn"
-            onClick={() => navigate('/signup')}
-            style={{
-              padding: '8px 20px', borderRadius: '99px', fontSize: '13.5px', fontWeight: 500,
-              background: 'linear-gradient(135deg, #0D4D7C, #1A6A9A)', color: '#fff',
-              border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
-              transition: 'transform 0.3s, box-shadow 0.3s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(13,77,124,0.3)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
-          >
-            {t.nav.join}
-          </button>
         </div>
 
         {/* ── MOBILE RIGHT: lang + hamburger ── */}
@@ -254,34 +227,6 @@ export default function Navbar() {
             );
           })}
         </nav>
-
-        {/* Join CTA */}
-        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(62,200,200,0.15)', display: 'flex', gap: '0.75rem' }}>
-          <Link
-            to="/login"
-            onClick={() => setMobileOpen(false)}
-            style={{
-              flex: 1, padding: '13px', borderRadius: '99px', textAlign: 'center',
-              background: 'rgba(255,255,255,0.75)', border: '1.5px solid rgba(13,77,124,0.2)',
-              color: 'var(--uid-navy)', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
-              fontSize: '14.5px', fontWeight: 500, letterSpacing: '0.2px', textDecoration: 'none',
-            }}
-          >
-            {t.nav.login}
-          </Link>
-          <button
-            className="shimmer-btn"
-            onClick={() => navigate('/signup')}
-            style={{
-              flex: 1, padding: '13px', borderRadius: '99px',
-              background: 'linear-gradient(135deg, #0D4D7C, #1A6A9A)', color: '#fff',
-              border: 'none', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
-              fontSize: '14.5px', fontWeight: 500, letterSpacing: '0.2px',
-            }}
-          >
-            {t.nav.join}
-          </button>
-        </div>
       </div>
     </>
   );

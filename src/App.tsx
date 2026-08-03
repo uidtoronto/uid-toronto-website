@@ -12,8 +12,9 @@ import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Membership from './pages/Membership';
-import MembershipRegister from './pages/MembershipRegister';
+import MembershipPayment from './pages/MembershipPayment';
 import PaymentSuccess from './pages/PaymentSuccess';
+import MembershipConfirmation from './pages/MembershipConfirmation';
 import PaymentCancelled from './pages/PaymentCancelled';
 import Dashboard from './pages/Dashboard';
 import { PricingPage } from './pages/PricingPage';
@@ -36,12 +37,14 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<><Navbar /><Home /></>} />
       <Route path="/works" element={<Works />} />
-      <Route path="/signup" element={<Navigate to="/register" replace />} />
-      <Route path="/register" element={<MembershipRegister />} />
+      <Route path="/signup" element={<Navigate to="/membership?plan=monthly" replace />} />
+      <Route path="/register" element={<Navigate to={{ pathname: '/', hash: 'uye' }} replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/membership" element={<Membership />} />
+      <Route path="/membership/payment" element={<MembershipPayment />} />
+      <Route path="/membership-confirmation" element={<MembershipConfirmation />} />
       <Route path="/donate" element={<><Navbar /><Donate /></>} />
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/payment-cancelled" element={<PaymentCancelled />} />

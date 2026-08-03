@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, Star } from 'lucide-react';
 import type { StripeProduct } from '../../stripe-config';
-import { useAuth } from '../../context/AuthContext';
 import { EmbeddedCheckoutPanel } from './EmbeddedCheckoutPanel';
 import { buildPaymentReturnUrl } from '../../services/stripe';
 import type { PlanId } from '../../services/stripe';
@@ -19,22 +18,14 @@ export function PricingCard({
   product,
   isCurrentPlan,
   isCheckoutOpen,
-  onSelectPlan,
   onCloseCheckout,
 }: PricingCardProps) {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
   const [error, setError] = React.useState<string | null>(null);
 
   const handleCheckout = () => {
     setError(null);
-
-    if (!isAuthenticated) {
-      navigate('/login?redirect=/pricing');
-      return;
-    }
-
-    onSelectPlan?.(product.id as PlanId);
+    navigate(`/membership?plan=${product.id}`);
   };
 
   if (isCheckoutOpen) {
@@ -42,7 +33,7 @@ export function PricingCard({
       <div className="sm:col-span-2">
         <EmbeddedCheckoutPanel
           checkoutParams={{
-            priceId: product.priceId,
+            productId: product.productId,
             mode: product.mode,
             returnUrl: buildPaymentReturnUrl({ plan: product.id as PlanId }),
           }}

@@ -12,7 +12,7 @@ export interface PlanInfo {
   description: string;
   features: string[];
   savings?: string;
-  priceId: string;
+  productId: string;
 }
 
 export const PLANS: Record<PlanId, PlanInfo> = Object.fromEntries(
@@ -26,8 +26,7 @@ export const PLANS: Record<PlanId, PlanInfo> = Object.fromEntries(
       interval: product.interval,
       description: product.description,
       features: product.features,
-      priceId: product.priceId,
-      ...(product.id === 'annual' ? { savings: 'Save $240/year' } : {}),
+      productId: product.productId,
     },
   ]),
 ) as Record<PlanId, PlanInfo>;
@@ -36,12 +35,47 @@ export function buildPaymentReturnUrl(params: {
   memberId?: string;
   plan?: PlanId;
 }): string {
-  const url = new URL(`${window.location.origin}/payment-success`);
+  const url = new URL(`${window.location.origin}/membership-confirmation`);
   if (params.memberId) url.searchParams.set('member', params.memberId);
   if (params.plan) url.searchParams.set('plan', params.plan);
   return url.toString();
 }
 
+export async function verifyMemberPayment(memberId: string): Promise<{ paid: boolean; error?: string }> {
+  const { env } = await import('../lib/env');
+
+  try {
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const response = await fetch(`${env.supabaseUrl}/functions/v1/verify-member-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${env.supabaseAnonKey}`,
+        },
+        body: JSON.stringify({ member_id: memberId }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        return { paid: false, error: payload?.error ?? 'Doğrulama başarısız.' };
+      }
+
+      const { paid } = await response.json();
+      if (paid) return { paid: true };
+
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+
+    return {
+      paid: false,
+      error: 'Ödeme henüz onaylanmadı. Ödemeyi tamamladıysanız birkaç dakika sonra tekrar deneyin.',
+    };
+  } catch (e) {
+    return { paid: false, error: e instanceof Error ? e.message : 'Doğrulama başarısız.' };
+  }
+}
+
+/** @deprecated Use verifyMemberPayment for guest checkout flow. */
 export async function verifyPayment(): Promise<{ paid: boolean; error?: string }> {
   try {
     for (let attempt = 0; attempt < 6; attempt++) {

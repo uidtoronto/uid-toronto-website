@@ -3,16 +3,22 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSubscription } from '../../hooks/useSubscription';
 
+/** Set to true to re-enable the member dashboard for authenticated subscribers. */
+export const MEMBER_DASHBOARD_ENABLED = false;
+
 interface AuthGuardProps {
   children: ReactNode;
 }
 
-// Protects /dashboard — requires an authenticated user with an active
-// subscription. Non-authenticated users are sent to /login; authenticated
-// users without an active subscription are sent to /pricing.
+// Protects /dashboard — currently disabled for public members.
+// Set MEMBER_DASHBOARD_ENABLED = true to restore auth + subscription checks.
 export default function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const { isActive, loading: subLoading } = useSubscription();
+
+  if (!MEMBER_DASHBOARD_ENABLED) {
+    return <Navigate to="/" replace />;
+  }
 
   const loading = isLoading || subLoading;
 

@@ -24,10 +24,8 @@ export default function Login() {
     if (!err) {
       if (user?.role === 'super_admin') {
         navigate('/admin');
-      } else if (user?.membership_status === 'active') {
-        navigate('/dashboard');
       } else {
-        navigate('/pricing');
+        navigate('/');
       }
     }
   };
@@ -36,9 +34,9 @@ export default function Login() {
 
   return (
     <AuthLayout
-      title="Welcome Back"
-      subtitle="Sign in to access your UID Toronto member dashboard."
-      footer={<>Don't have an account? <Link to="/register" style={{ color: 'var(--uid-teal-dark)', fontWeight: 500, textDecoration: 'none' }}>Become a member</Link></>}
+      title="Admin Sign In"
+      subtitle="Super admin access to the UID Toronto CMS."
+      footer={null}
     >
       <form onSubmit={handleSubmit} noValidate>
         {displayError && (

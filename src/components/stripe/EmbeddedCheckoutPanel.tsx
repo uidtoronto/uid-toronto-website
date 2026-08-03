@@ -52,11 +52,11 @@ export function EmbeddedCheckoutPanel({
       cancelled = true;
     };
   }, [
-    checkoutParams.priceId,
+    checkoutParams.productId,
     checkoutParams.mode,
     checkoutParams.returnUrl,
     checkoutParams.memberId,
-    checkoutParams.authUserId,
+    checkoutParams.guestCheckout,
   ]);
 
   return (

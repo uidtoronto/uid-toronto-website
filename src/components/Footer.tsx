@@ -6,7 +6,7 @@ import { FooterArchBorder } from './BackgroundDecor';
 
 const SOCIAL = [
   { Icon: Instagram, label: 'Instagram', href: 'https://www.instagram.com/uidtoronto/' },
-  { Icon: Facebook, label: 'Facebook', href: 'https://www.facebook.com/profile.php?id=61586044043053&locale=he_IL' },
+  { Icon: Facebook, label: 'Facebook', href: 'https://www.facebook.com/share/1BTc5KnoBW/?mibextid=wwXIfr' },
   { Icon: Youtube, label: 'YouTube', href: 'https://www.youtube.com/@UidToronto' },
   { Icon: Twitter, label: 'X', href: '#' },
   { Icon: Linkedin, label: 'LinkedIn', href: '#' },

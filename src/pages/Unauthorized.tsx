@@ -20,14 +20,14 @@ export default function Unauthorized() {
           You don't have access to this page
         </h1>
         <p style={{ fontSize: '15px', color: 'var(--text-mid)', fontWeight: 300, lineHeight: 1.7, margin: '0 0 2rem', fontFamily: "'DM Sans', sans-serif" }}>
-          This area requires an active membership. Sign in or complete your registration to continue.
+          This area is restricted to super administrators.
         </p>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 32px', borderRadius: '99px', fontSize: '15px', fontWeight: 500, fontFamily: "'DM Sans', sans-serif", background: 'linear-gradient(135deg, #0D4D7C, #1A6A9A)', color: '#fff', textDecoration: 'none' }}>
-            <LogIn size={17} /> Sign in
+            <LogIn size={17} /> Admin sign in
           </Link>
-          <Link to="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 32px', borderRadius: '99px', fontSize: '15px', fontWeight: 500, fontFamily: "'DM Sans', sans-serif", background: 'rgba(255,255,255,0.75)', border: '1.5px solid rgba(13,77,124,0.2)', color: 'var(--uid-navy)', textDecoration: 'none' }}>
-            Become a member
+          <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 32px', borderRadius: '99px', fontSize: '15px', fontWeight: 500, fontFamily: "'DM Sans', sans-serif", background: 'rgba(255,255,255,0.75)', border: '1.5px solid rgba(13,77,124,0.2)', color: 'var(--uid-navy)', textDecoration: 'none' }}>
+            Back to home
           </Link>
         </div>
       </motion.div>
