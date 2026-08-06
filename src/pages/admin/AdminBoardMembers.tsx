@@ -1,6 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Loader2, Plus, Pencil, Trash2, GripVertical } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
+import { useAdminSuccess } from '../../context/AdminSuccessContext';
+import { useConfirm } from '../../context/ConfirmContext';
+import { useAdminEditorGuard } from '../../hooks/useAdminEditorGuard';
+import UnsavedChangesPrompt from '../../components/admin/UnsavedChangesPrompt';
 import { TextField, TextAreaField } from '../../components/admin/AdminField';
 import { ImageUpload } from '../../components/admin/ImageUpload';
 import {
@@ -10,6 +14,7 @@ import {
   deleteBoardMember,
   reorderBoardMembers,
 } from '../../services/boardMembers';
+import { adminTr } from '../../lib/adminTr';
 import type { BoardMember, BoardMemberInput } from '../../types';
 
 const emptyForm: BoardMemberInput = {
@@ -26,6 +31,8 @@ const emptyForm: BoardMemberInput = {
 
 export default function AdminBoardMembers() {
   const { toast } = useToast();
+  const { showSuccessFor } = useAdminSuccess();
+  const { confirm } = useConfirm();
   const [items, setItems] = useState<BoardMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -33,6 +40,14 @@ export default function AdminBoardMembers() {
   const [form, setForm] = useState<BoardMemberInput>(emptyForm);
   const [uploadFolder, setUploadFolder] = useState<string>(() => crypto.randomUUID());
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+
+  const discardEdit = useCallback(() => { setEditingId(null); setIsDirty(false); }, []);
+  const { showUnsavedDialog, confirmLeave, cancelLeave, requestCancel } = useAdminEditorGuard(editingId !== null, isDirty, discardEdit);
+  const patchForm = useCallback((patch: Partial<BoardMemberInput> | ((f: BoardMemberInput) => BoardMemberInput)) => {
+    setForm(typeof patch === 'function' ? patch : f => ({ ...f, ...patch }));
+    setIsDirty(true);
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -48,6 +63,7 @@ export default function AdminBoardMembers() {
     setEditingId('new');
     setForm({ ...emptyForm, sort_order: items.length });
     setUploadFolder(crypto.randomUUID());
+    setIsDirty(false);
   };
 
   const startEdit = (item: BoardMember) => {
@@ -64,11 +80,12 @@ export default function AdminBoardMembers() {
       is_featured: item.is_featured,
       sort_order: item.sort_order,
     });
+    setIsDirty(false);
   };
 
   const handleSave = async () => {
     if (!form.position_en.trim()) {
-      toast('English position is required.', 'error');
+      toast(adminTr.boardRequired, 'error');
       return;
     }
     setSaving(true);
@@ -80,18 +97,19 @@ export default function AdminBoardMembers() {
       toast(res.error, 'error');
       return;
     }
-    toast(editingId === 'new' ? 'Board member created.' : 'Board member updated.', 'success');
+    showSuccessFor('board', editingId === 'new' ? 'created' : 'updated');
     setEditingId(null);
+    setIsDirty(false);
     void load();
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this board member?')) return;
+    if (!await confirm(adminTr.confirmDeleteBoard)) return;
     const res = await deleteBoardMember(id);
     if (res.error) toast(res.error, 'error');
     else {
-      toast('Board member deleted.', 'success');
-      if (editingId === id) setEditingId(null);
+      showSuccessFor('board', 'deleted');
+      if (editingId === id) discardEdit();
       void load();
     }
   };
@@ -116,53 +134,54 @@ export default function AdminBoardMembers() {
       toast(res.error, 'error');
       void load();
     } else {
-      toast('Order saved.', 'success');
+      showSuccessFor('board', 'order');
     }
   };
 
   return (
     <div className="admin-fade-up">
+      <UnsavedChangesPrompt open={showUnsavedDialog} onConfirm={confirmLeave} onCancel={cancelLeave} />
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         <div>
-          <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--uid-teal-dark)', fontWeight: 600 }}>Content</p>
-          <h1 style={{ margin: '0.25rem 0 0', fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 400, color: 'var(--uid-navy)' }}><em>Board Members</em></h1>
+          <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--uid-teal-dark)', fontWeight: 600 }}>{adminTr.content}</p>
+          <h1 style={{ margin: '0.25rem 0 0', fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 400, color: 'var(--uid-navy)' }}><em>{adminTr.board}</em></h1>
         </div>
         <button type="button" onClick={startNew} style={primaryBtn}>
-          <Plus size={16} /> New member
+          <Plus size={16} /> {adminTr.newBoardMember}
         </button>
       </div>
 
       {editingId && (
         <div style={panelStyle}>
-          <h2 style={panelTitle}>{editingId === 'new' ? 'Create board member' : 'Edit board member'}</h2>
+          <h2 style={panelTitle}>{editingId === 'new' ? adminTr.createBoardMember : adminTr.editBoardMember}</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0 1rem' }}>
-            <TextField label="Name (English)" value={form.name_en} onChange={e => setForm(f => ({ ...f, name_en: e.target.value }))} />
-            <TextField label="Name (Turkish)" value={form.name_tr} onChange={e => setForm(f => ({ ...f, name_tr: e.target.value }))} />
-            <TextField label="Position (English) *" value={form.position_en} onChange={e => setForm(f => ({ ...f, position_en: e.target.value }))} />
-            <TextField label="Position (Turkish)" value={form.position_tr} onChange={e => setForm(f => ({ ...f, position_tr: e.target.value }))} />
+            <TextField label={adminTr.nameEn} value={form.name_en} onChange={e => patchForm({ name_en: e.target.value })} />
+            <TextField label={adminTr.nameTr} value={form.name_tr} onChange={e => patchForm({ name_tr: e.target.value })} />
+            <TextField label={adminTr.positionEn} value={form.position_en} onChange={e => patchForm({ position_en: e.target.value })} />
+            <TextField label={adminTr.positionTr} value={form.position_tr} onChange={e => patchForm({ position_tr: e.target.value })} />
           </div>
-          <TextAreaField label="Description (English)" value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} />
-          <TextAreaField label="Description (Turkish)" value={form.description_tr} onChange={e => setForm(f => ({ ...f, description_tr: e.target.value }))} />
-          <ImageUpload bucket="board-photos" folderId={uploadFolder} value={form.photo_url ?? null} onChange={url => setForm(f => ({ ...f, photo_url: url }))} label="Profile photo" />
+          <TextAreaField label={adminTr.descriptionEn} value={form.description_en} onChange={e => patchForm({ description_en: e.target.value })} />
+          <TextAreaField label={adminTr.descriptionTr} value={form.description_tr} onChange={e => patchForm({ description_tr: e.target.value })} />
+          <ImageUpload bucket="board-photos" folderId={uploadFolder} value={form.photo_url ?? null} onChange={url => patchForm({ photo_url: url })} label={adminTr.profilePhoto} />
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--uid-navy)' }}>
-            <input type="checkbox" checked={form.is_featured} onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))} />
-            Featured (President / Secretary row)
+            <input type="checkbox" checked={form.is_featured} onChange={e => patchForm({ is_featured: e.target.checked })} />
+            {adminTr.featuredRow}
           </label>
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button type="button" onClick={() => void handleSave()} disabled={saving} style={primaryBtn}>{saving ? 'Saving…' : 'Save'}</button>
-            <button type="button" onClick={() => setEditingId(null)} style={secondaryBtn}>Cancel</button>
+            <button type="button" onClick={() => void handleSave()} disabled={saving} style={primaryBtn}>{saving ? adminTr.saving : adminTr.save}</button>
+            <button type="button" onClick={() => void requestCancel()} style={secondaryBtn}>{adminTr.cancel}</button>
           </div>
         </div>
       )}
 
       <div style={panelStyle}>
         <p style={{ margin: '0 0 1rem', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: 'var(--text-soft)' }}>
-          Drag rows to reorder. Order is reflected on the public BYK section.
+          {adminTr.dragReorder}
         </p>
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}><Loader2 className="animate-spin" size={24} style={{ color: 'var(--uid-teal)' }} /></div>
         ) : items.length === 0 ? (
-          <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-soft)' }}>No board members yet.</p>
+          <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-soft)' }}>{adminTr.noBoard}</p>
         ) : (
           items.map((item, index) => (
             <div
@@ -180,22 +199,22 @@ export default function AdminBoardMembers() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0, flex: 1 }}>
                 <GripVertical size={16} style={{ color: 'var(--text-soft)', flexShrink: 0 }} />
                 {item.photo_url ? (
-                  <img src={item.photo_url} alt="" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                  <img src={item.photo_url} alt={item.name_en || item.name_tr || adminTr.profilePhoto} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                 ) : (
                   <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(62,200,200,0.15)', flexShrink: 0 }} />
                 )}
                 <div style={{ minWidth: 0 }}>
                   <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 600, color: 'var(--uid-navy)' }}>
-                    {item.name_en || item.name_tr || '(No name)'}
+                    {item.name_en || item.name_tr || adminTr.noName}
                   </p>
                   <p style={{ margin: '4px 0 0', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: 'var(--text-soft)' }}>
-                    {item.position_en}{item.is_featured ? ' · Featured' : ''}
+                    {item.position_en}{item.is_featured ? ` · ${adminTr.featured}` : ''}
                   </p>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                <IconBtn onClick={() => startEdit(item)} title="Edit"><Pencil size={15} /></IconBtn>
-                <IconBtn onClick={() => void handleDelete(item.id)} title="Delete"><Trash2 size={15} /></IconBtn>
+              <div className="admin-list-actions">
+                <IconBtn onClick={() => startEdit(item)} title={adminTr.edit}><Pencil size={15} /></IconBtn>
+                <IconBtn onClick={() => void handleDelete(item.id)} title={adminTr.delete}><Trash2 size={15} /></IconBtn>
               </div>
             </div>
           ))
@@ -207,10 +226,7 @@ export default function AdminBoardMembers() {
 
 function IconBtn({ children, onClick, title }: { children: React.ReactNode; onClick: () => void; title: string }) {
   return (
-    <button type="button" title={title} onClick={onClick} style={{
-      width: '34px', height: '34px', borderRadius: '8px', border: '1px solid rgba(13,77,124,0.12)',
-      background: '#fff', color: 'var(--uid-navy)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
+    <button type="button" title={title} aria-label={title} onClick={onClick} className="admin-icon-btn focus-ring">
       {children}
     </button>
   );

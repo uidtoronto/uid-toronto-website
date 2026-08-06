@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useCallback, lazy, useMemo } from 'react';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { LangProvider } from './context/LangContext';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
@@ -23,50 +23,52 @@ import Unauthorized from './pages/Unauthorized';
 import AuthGuard from './components/auth/AuthGuard';
 import SuperAdminGuard from './components/auth/SuperAdminGuard';
 import AdminLayout from './components/admin/AdminLayout';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminNews from './pages/admin/AdminNews';
-import AdminEvents from './pages/admin/AdminEvents';
-import AdminMembers from './pages/admin/AdminMembers';
-import AdminDonations from './pages/admin/AdminDonations';
-import AdminBoardMembers from './pages/admin/AdminBoardMembers';
-import AdminProjects from './pages/admin/AdminProjects';
 import Donate from './pages/Donate';
 
-function AppRoutes() {
-  return (
-    <Routes>
-      <Route path="/" element={<><Navbar /><Home /></>} />
-      <Route path="/works" element={<Works />} />
-      <Route path="/signup" element={<Navigate to="/membership?plan=monthly" replace />} />
-      <Route path="/register" element={<Navigate to={{ pathname: '/', hash: 'uye' }} replace />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/membership" element={<Membership />} />
-      <Route path="/membership/payment" element={<MembershipPayment />} />
-      <Route path="/membership-confirmation" element={<MembershipConfirmation />} />
-      <Route path="/donate" element={<><Navbar /><Donate /></>} />
-      <Route path="/payment-success" element={<PaymentSuccess />} />
-      <Route path="/payment-cancelled" element={<PaymentCancelled />} />
-      <Route path="/pricing" element={<PricingPage />} />
-      <Route path="/unauthorized" element={<Unauthorized />} />
-      <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminNews = lazy(() => import('./pages/admin/AdminNews'));
+const AdminEvents = lazy(() => import('./pages/admin/AdminEvents'));
+const AdminMembers = lazy(() => import('./pages/admin/AdminMembers'));
+const AdminDonations = lazy(() => import('./pages/admin/AdminDonations'));
+const AdminBoardMembers = lazy(() => import('./pages/admin/AdminBoardMembers'));
+const AdminProjects = lazy(() => import('./pages/admin/AdminProjects'));
 
-      {/* Super Admin dashboard */}
-      <Route path="/admin" element={<SuperAdminGuard><AdminLayout /></SuperAdminGuard>}>
-        <Route index element={<AdminDashboard />} />
-        <Route path="news" element={<AdminNews />} />
-        <Route path="events" element={<AdminEvents />} />
-        <Route path="members" element={<AdminMembers />} />
-        <Route path="board" element={<AdminBoardMembers />} />
-        <Route path="projects" element={<AdminProjects />} />
-        <Route path="donations" element={<AdminDonations />} />
-      </Route>
-      <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
+function AppRouter() {
+  const router = useMemo(() => createBrowserRouter([
+    { path: '/', element: <><Navbar /><Home /></> },
+    { path: '/works', element: <Works /> },
+    { path: '/signup', element: <Navigate to="/membership?plan=monthly" replace /> },
+    { path: '/register', element: <Navigate to={{ pathname: '/', hash: 'uye' }} replace /> },
+    { path: '/login', element: <Login /> },
+    { path: '/forgot-password', element: <ForgotPassword /> },
+    { path: '/reset-password', element: <ResetPassword /> },
+    { path: '/membership', element: <Membership /> },
+    { path: '/membership/payment', element: <MembershipPayment /> },
+    { path: '/membership-confirmation', element: <MembershipConfirmation /> },
+    { path: '/donate', element: <><Navbar /><Donate /></> },
+    { path: '/payment-success', element: <PaymentSuccess /> },
+    { path: '/payment-cancelled', element: <PaymentCancelled /> },
+    { path: '/pricing', element: <PricingPage /> },
+    { path: '/unauthorized', element: <Unauthorized /> },
+    { path: '/dashboard', element: <AuthGuard><Dashboard /></AuthGuard> },
+    {
+      path: '/admin',
+      element: <SuperAdminGuard><AdminLayout /></SuperAdminGuard>,
+      children: [
+        { index: true, element: <AdminDashboard /> },
+        { path: 'news', element: <AdminNews /> },
+        { path: 'events', element: <AdminEvents /> },
+        { path: 'members', element: <AdminMembers /> },
+        { path: 'board', element: <AdminBoardMembers /> },
+        { path: 'projects', element: <AdminProjects /> },
+        { path: 'donations', element: <AdminDonations /> },
+      ],
+    },
+    { path: '/admin/*', element: <Navigate to="/admin" replace /> },
+    { path: '*', element: <NotFound /> },
+  ]), []);
 
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default function App() {
@@ -77,14 +79,12 @@ export default function App() {
     <ErrorBoundary>
       <LangProvider>
         <AuthProvider>
-          <BrowserRouter>
-            <ToastProvider>
-              {!loaded && <LoadingScreen onDone={handleDone} />}
-              <div style={{ visibility: loaded ? 'visible' : 'hidden' }}>
-                <AppRoutes />
-              </div>
-            </ToastProvider>
-          </BrowserRouter>
+          <ToastProvider>
+            {!loaded && <LoadingScreen onDone={handleDone} />}
+            <div style={{ visibility: loaded ? 'visible' : 'hidden' }}>
+              <AppRouter />
+            </div>
+          </ToastProvider>
         </AuthProvider>
       </LangProvider>
     </ErrorBoundary>

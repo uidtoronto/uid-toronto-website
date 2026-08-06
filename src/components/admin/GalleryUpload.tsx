@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { ImagePlus, Loader2, X } from 'lucide-react';
 import { uploadCmsImage, type StorageBucket } from '../../services/storage';
+import { adminTr } from '../../lib/adminTr';
 
 interface GalleryUploadProps {
   bucket: StorageBucket;
@@ -10,7 +11,7 @@ interface GalleryUploadProps {
   label?: string;
 }
 
-export function GalleryUpload({ bucket, folderId, value, onChange, label = 'Gallery images' }: GalleryUploadProps) {
+export function GalleryUpload({ bucket, folderId, value, onChange, label = adminTr.galleryImages }: GalleryUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,11 +45,11 @@ export function GalleryUpload({ bucket, folderId, value, onChange, label = 'Gall
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem' }}>
           {value.map((url, i) => (
             <div key={`${url}-${i}`} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(13,77,124,0.12)', width: '100px', height: '80px' }}>
-              <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <img src={url} alt={`${label} ${i + 1}`} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               <button
                 type="button"
                 onClick={() => removeAt(i)}
-                aria-label="Remove image"
+                aria-label={adminTr.removeImage}
                 style={{
                   position: 'absolute', top: '4px', right: '4px',
                   width: '22px', height: '22px', borderRadius: '50%',
@@ -75,7 +76,7 @@ export function GalleryUpload({ bucket, folderId, value, onChange, label = 'Gall
         }}
       >
         {uploading ? <Loader2 size={18} className="animate-spin" /> : <ImagePlus size={18} />}
-        {uploading ? 'Uploading…' : 'Add gallery images'}
+        {uploading ? adminTr.uploading : adminTr.addGalleryImages}
       </button>
       <input
         ref={inputRef}

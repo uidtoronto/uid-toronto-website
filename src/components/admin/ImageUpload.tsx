@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { ImagePlus, Loader2, X } from 'lucide-react';
 import { uploadCmsImage, type StorageBucket } from '../../services/storage';
+import { adminTr } from '../../lib/adminTr';
 
 interface ImageUploadProps {
   bucket: StorageBucket;
@@ -10,7 +11,7 @@ interface ImageUploadProps {
   label?: string;
 }
 
-export function ImageUpload({ bucket, folderId, value, onChange, label = 'Featured image' }: ImageUploadProps) {
+export function ImageUpload({ bucket, folderId, value, onChange, label = adminTr.featuredImage }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,11 +35,11 @@ export function ImageUpload({ bucket, folderId, value, onChange, label = 'Featur
       </p>
       {value ? (
         <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(13,77,124,0.12)', maxWidth: '320px' }}>
-          <img src={value} alt="" style={{ width: '100%', height: '160px', objectFit: 'cover', display: 'block' }} />
+          <img src={value} alt={label} loading="lazy" decoding="async" style={{ width: '100%', height: '160px', objectFit: 'cover', display: 'block' }} />
           <button
             type="button"
             onClick={() => onChange(null)}
-            aria-label="Remove image"
+            aria-label={adminTr.removeImage}
             style={{
               position: 'absolute', top: '8px', right: '8px',
               width: '28px', height: '28px', borderRadius: '50%',
@@ -63,7 +64,7 @@ export function ImageUpload({ bucket, folderId, value, onChange, label = 'Featur
           }}
         >
           {uploading ? <Loader2 size={18} className="animate-spin" /> : <ImagePlus size={18} />}
-          {uploading ? 'Uploading…' : 'Upload image'}
+          {uploading ? adminTr.uploading : adminTr.uploadImage}
         </button>
       )}
       <input

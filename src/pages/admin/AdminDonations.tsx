@@ -6,6 +6,7 @@ import {
   getDonationStatsAdmin,
   formatDonationAmount,
 } from '../../services/donations';
+import { adminTr } from '../../lib/adminTr';
 import type { Donation, DonationStats } from '../../types';
 
 export default function AdminDonations() {
@@ -30,19 +31,19 @@ export default function AdminDonations() {
   useEffect(() => { void load(); }, []);
 
   return (
-    <div>
+    <div className="admin-fade-up">
       <div style={{ marginBottom: '2rem' }}>
         <p style={{ margin: '0 0 0.5rem', fontFamily: "'DM Sans', sans-serif", fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--uid-teal)', fontWeight: 600 }}>
-          Finance
+          {adminTr.finance}
         </p>
         <h1 style={{ margin: 0, fontFamily: "'Cormorant Garamond', serif", fontSize: '32px', fontWeight: 500, color: 'var(--uid-navy)' }}>
-          Donations
+          {adminTr.donations}
         </h1>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-        <StatCard label="Total Donations" value={String(stats.totalCount)} icon={<Heart size={18} color="var(--uid-teal)" />} />
-        <StatCard label="Total Raised" value={formatDonationAmount(stats.totalAmountCents)} />
+        <StatCard label={adminTr.totalDonations} value={String(stats.totalCount)} icon={<Heart size={18} color="var(--uid-teal)" />} />
+        <StatCard label={adminTr.totalRaised} value={formatDonationAmount(stats.totalAmountCents)} />
       </div>
 
       {loading ? (
@@ -52,7 +53,7 @@ export default function AdminDonations() {
       ) : items.length === 0 ? (
         <div style={{ padding: '3rem', textAlign: 'center', background: '#fff', borderRadius: '16px', border: '1px solid rgba(13,77,124,0.08)' }}>
           <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-mid)' }}>
-            No donations recorded yet.
+            {adminTr.noDonations}
           </p>
         </div>
       ) : (
@@ -61,16 +62,16 @@ export default function AdminDonations() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: "'DM Sans', sans-serif", fontSize: '14px' }}>
               <thead>
                 <tr style={{ background: 'rgba(13,77,124,0.04)', borderBottom: '1px solid rgba(13,77,124,0.08)' }}>
-                  <th style={thStyle}>Date</th>
-                  <th style={thStyle}>Amount</th>
-                  <th style={thStyle}>Donor Email</th>
-                  <th style={thStyle}>Payment ID</th>
+                  <th style={thStyle}>{adminTr.date}</th>
+                  <th style={thStyle}>{adminTr.amount}</th>
+                  <th style={thStyle}>{adminTr.donorEmail}</th>
+                  <th style={thStyle}>{adminTr.paymentId}</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map(item => (
                   <tr key={item.id} style={{ borderBottom: '1px solid rgba(13,77,124,0.06)' }}>
-                    <td style={tdStyle}>{new Date(item.created_at).toLocaleString()}</td>
+                    <td style={tdStyle}>{new Date(item.created_at).toLocaleString('tr-TR')}</td>
                     <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--uid-navy)' }}>{formatDonationAmount(item.amount)}</td>
                     <td style={tdStyle}>{item.email ?? '—'}</td>
                     <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '12px', color: 'var(--text-soft)' }}>{item.stripe_payment_intent_id}</td>

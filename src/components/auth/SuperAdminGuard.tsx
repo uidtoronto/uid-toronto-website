@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 interface SuperAdminGuardProps {
@@ -9,12 +9,13 @@ interface SuperAdminGuardProps {
 // Protects /admin — requires an authenticated super_admin (app_metadata.role).
 export default function SuperAdminGuard({ children }: SuperAdminGuardProps) {
   const { isAuthenticated, isSuperAdmin, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(165deg, #F0F9FF 0%, #EAF5F5 35%, #F7FAFC 65%, #FFFFFF 100%)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-          <svg className="animate-spin" width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--uid-teal)' }}>
+          <svg className="animate-spin" width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--uid-teal)' }} aria-hidden="true">
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25" />
             <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
           </svg>
@@ -24,7 +25,10 @@ export default function SuperAdminGuard({ children }: SuperAdminGuardProps) {
     );
   }
 
-  if (!isAuthenticated) return <Navigate to="/login?redirect=/admin" replace />;
+  if (!isAuthenticated) {
+    const redirect = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/login?redirect=${redirect}`} replace />;
+  }
   if (!isSuperAdmin) return <Navigate to="/unauthorized" replace />;
   return <>{children}</>;
 }

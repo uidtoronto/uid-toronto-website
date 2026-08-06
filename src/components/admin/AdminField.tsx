@@ -1,6 +1,7 @@
 import { forwardRef, type InputHTMLAttributes, type SelectHTMLAttributes } from 'react';
 import type { MemberStatus } from '../../types';
 import { statusStyle } from '../../lib/memberUtils';
+import { adminStatusLabels } from '../../lib/adminTr';
 
 // Shared text/select input styling for admin forms — matches the brand.
 const baseField: React.CSSProperties = {
@@ -116,7 +117,7 @@ export function StatusBadge({ status }: { status: MemberStatus }) {
       fontFamily: "'DM Sans', sans-serif", fontSize: '11.5px', fontWeight: 600,
     }}>
       <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: s.dot, flexShrink: 0 }} />
-      {s.label}
+      {adminStatusLabels[status] ?? s.label}
     </span>
   );
 }

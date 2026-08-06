@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock } from 'lucide-react';
 import AuthLayout from '../components/auth/AuthLayout';
 import AuthInput from '../components/auth/AuthInput';
 import AuthButton from '../components/auth/AuthButton';
 import { useAuth } from '../context/AuthContext';
+import { resolveAdminLoginRedirect } from '../lib/adminRoute';
 
 export default function Login() {
   const { login, isPending, error, clearError } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(true);
@@ -23,7 +25,7 @@ export default function Login() {
     const { error: err, user } = await login({ emailOrUsername, password, remember });
     if (!err) {
       if (user?.role === 'super_admin') {
-        navigate('/admin');
+        navigate(resolveAdminLoginRedirect(searchParams.get('redirect')));
       } else {
         navigate('/');
       }

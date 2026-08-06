@@ -1,6 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Loader2, Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
+import { useAdminSuccess } from '../../context/AdminSuccessContext';
+import { useConfirm } from '../../context/ConfirmContext';
+import { useAdminEditorGuard } from '../../hooks/useAdminEditorGuard';
+import UnsavedChangesPrompt from '../../components/admin/UnsavedChangesPrompt';
 import { TextField, TextAreaField } from '../../components/admin/AdminField';
 import { ImageUpload } from '../../components/admin/ImageUpload';
 import {
@@ -10,6 +14,7 @@ import {
   deleteEvent,
   setEventPublished,
 } from '../../services/events';
+import { adminTr } from '../../lib/adminTr';
 import type { EventInput, EventRecord } from '../../types';
 
 const emptyForm: EventInput = {
@@ -26,12 +31,22 @@ const emptyForm: EventInput = {
 
 export default function AdminEvents() {
   const { toast } = useToast();
+  const { showSuccessFor } = useAdminSuccess();
+  const { confirm } = useConfirm();
   const [items, setItems] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | 'new' | null>(null);
   const [form, setForm] = useState<EventInput>(emptyForm);
   const [uploadFolder, setUploadFolder] = useState<string>(() => crypto.randomUUID());
+  const [isDirty, setIsDirty] = useState(false);
+
+  const discardEdit = useCallback(() => { setEditingId(null); setIsDirty(false); }, []);
+  const { showUnsavedDialog, confirmLeave, cancelLeave, requestCancel } = useAdminEditorGuard(editingId !== null, isDirty, discardEdit);
+  const patchForm = useCallback((patch: Partial<EventInput> | ((f: EventInput) => EventInput)) => {
+    setForm(typeof patch === 'function' ? patch : f => ({ ...f, ...patch }));
+    setIsDirty(true);
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -43,11 +58,7 @@ export default function AdminEvents() {
 
   useEffect(() => { void load(); }, []);
 
-  const startNew = () => {
-    setEditingId('new');
-    setForm(emptyForm);
-    setUploadFolder(crypto.randomUUID());
-  };
+  const startNew = () => { setEditingId('new'); setForm(emptyForm); setUploadFolder(crypto.randomUUID()); setIsDirty(false); };
 
   const startEdit = (item: EventRecord) => {
     setEditingId(item.id);
@@ -63,11 +74,12 @@ export default function AdminEvents() {
       image_url: item.image_url,
       is_published: item.is_published,
     });
+    setIsDirty(false);
   };
 
   const handleSave = async () => {
     if (!form.title_en.trim() || !form.description_en.trim() || !form.event_date || !form.location.trim()) {
-      toast('Title, description, date, and location are required.', 'error');
+      toast(adminTr.eventRequired, 'error');
       return;
     }
     setSaving(true);
@@ -79,18 +91,19 @@ export default function AdminEvents() {
       toast(res.error, 'error');
       return;
     }
-    toast(editingId === 'new' ? 'Event created.' : 'Event updated.', 'success');
+    showSuccessFor('event', editingId === 'new' ? 'created' : 'updated');
     setEditingId(null);
+    setIsDirty(false);
     void load();
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this event?')) return;
+    if (!await confirm(adminTr.confirmDeleteEvent)) return;
     const res = await deleteEvent(id);
     if (res.error) toast(res.error, 'error');
     else {
-      toast('Event deleted.', 'success');
-      if (editingId === id) setEditingId(null);
+      showSuccessFor('event', 'deleted');
+      if (editingId === id) discardEdit();
       void load();
     }
   };
@@ -99,41 +112,42 @@ export default function AdminEvents() {
     const res = await setEventPublished(item.id, !item.is_published);
     if (res.error) toast(res.error, 'error');
     else {
-      toast(item.is_published ? 'Unpublished.' : 'Published.', 'success');
+      showSuccessFor('event', item.is_published ? 'unpublished' : 'published');
       void load();
     }
   };
 
   return (
     <div className="admin-fade-up">
+      <UnsavedChangesPrompt open={showUnsavedDialog} onConfirm={confirmLeave} onCancel={cancelLeave} />
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         <div>
-          <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--uid-teal-dark)', fontWeight: 600 }}>Content</p>
-          <h1 style={{ margin: '0.25rem 0 0', fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 400, color: 'var(--uid-navy)' }}><em>Events</em></h1>
+          <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '11px', letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--uid-teal-dark)', fontWeight: 600 }}>{adminTr.content}</p>
+          <h1 style={{ margin: '0.25rem 0 0', fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(28px, 4vw, 36px)', fontWeight: 400, color: 'var(--uid-navy)' }}><em>{adminTr.events}</em></h1>
         </div>
-        <button type="button" onClick={startNew} style={primaryBtn}><Plus size={16} /> New event</button>
+        <button type="button" onClick={startNew} style={primaryBtn}><Plus size={16} /> {adminTr.newEvent}</button>
       </div>
 
       {editingId && (
         <div style={panelStyle}>
-          <h2 style={panelTitle}>{editingId === 'new' ? 'Create event' : 'Edit event'}</h2>
+          <h2 style={panelTitle}>{editingId === 'new' ? adminTr.createEvent : adminTr.editEvent}</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0 1rem' }}>
-            <TextField label="Title (English) *" value={form.title_en} onChange={e => setForm(f => ({ ...f, title_en: e.target.value }))} />
-            <TextField label="Title (Turkish)" value={form.title_tr} onChange={e => setForm(f => ({ ...f, title_tr: e.target.value }))} />
-            <TextField label="Date *" type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} />
-            <TextField label="Time *" type="time" value={form.event_time} onChange={e => setForm(f => ({ ...f, event_time: e.target.value }))} />
-            <TextField label="Location *" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} />
+            <TextField label={adminTr.titleEn} value={form.title_en} onChange={e => patchForm({ title_en: e.target.value })} />
+            <TextField label={adminTr.titleTr} value={form.title_tr} onChange={e => patchForm({ title_tr: e.target.value })} />
+            <TextField label={adminTr.eventDate} type="date" value={form.event_date} onChange={e => patchForm({ event_date: e.target.value })} />
+            <TextField label={adminTr.eventTime} type="time" value={form.event_time} onChange={e => patchForm({ event_time: e.target.value })} />
+            <TextField label={adminTr.location} value={form.location} onChange={e => patchForm({ location: e.target.value })} />
           </div>
-          <TextAreaField label="Description (English) *" value={form.description_en} onChange={e => setForm(f => ({ ...f, description_en: e.target.value }))} />
-          <TextAreaField label="Description (Turkish)" value={form.description_tr} onChange={e => setForm(f => ({ ...f, description_tr: e.target.value }))} />
-          <ImageUpload bucket="event-images" folderId={uploadFolder} value={form.image_url ?? null} onChange={url => setForm(f => ({ ...f, image_url: url }))} />
+          <TextAreaField label={adminTr.descriptionEn} value={form.description_en} onChange={e => patchForm({ description_en: e.target.value })} />
+          <TextAreaField label={adminTr.descriptionTr} value={form.description_tr} onChange={e => patchForm({ description_tr: e.target.value })} />
+          <ImageUpload bucket="event-images" folderId={uploadFolder} value={form.image_url ?? null} onChange={url => patchForm({ image_url: url })} />
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--uid-navy)' }}>
-            <input type="checkbox" checked={form.is_published} onChange={e => setForm(f => ({ ...f, is_published: e.target.checked }))} />
-            Publish immediately
+            <input type="checkbox" checked={form.is_published} onChange={e => patchForm({ is_published: e.target.checked })} />
+            {adminTr.publishImmediately}
           </label>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button type="button" onClick={() => void handleSave()} disabled={saving} style={primaryBtn}>{saving ? 'Saving…' : 'Save'}</button>
-            <button type="button" onClick={() => setEditingId(null)} style={secondaryBtn}>Cancel</button>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button type="button" onClick={() => void handleSave()} disabled={saving} style={primaryBtn}>{saving ? adminTr.saving : adminTr.save}</button>
+            <button type="button" onClick={() => void requestCancel()} style={secondaryBtn}>{adminTr.cancel}</button>
           </div>
         </div>
       )}
@@ -142,20 +156,20 @@ export default function AdminEvents() {
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}><Loader2 className="animate-spin" size={24} style={{ color: 'var(--uid-teal)' }} /></div>
         ) : items.length === 0 ? (
-          <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-soft)' }}>No events yet.</p>
+          <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-soft)' }}>{adminTr.noEvents}</p>
         ) : (
           items.map(item => (
-            <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', padding: '0.875rem 0', borderBottom: '1px solid rgba(13,77,124,0.06)' }}>
+            <div key={item.id} className="admin-list-row">
               <div style={{ minWidth: 0, flex: 1 }}>
                 <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 600, color: 'var(--uid-navy)' }}>{item.title_en}</p>
                 <p style={{ margin: '4px 0 0', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: 'var(--text-soft)' }}>
-                  {item.event_date} {item.event_time.slice(0, 5)} · {item.location} · {item.is_published ? 'Published' : 'Draft'}
+                  {item.event_date} {item.event_time.slice(0, 5)} · {item.location} · {item.is_published ? adminTr.published : adminTr.draft}
                 </p>
               </div>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <IconBtn onClick={() => togglePublish(item)} title={item.is_published ? 'Unpublish' : 'Publish'}>{item.is_published ? <EyeOff size={15} /> : <Eye size={15} />}</IconBtn>
-                <IconBtn onClick={() => startEdit(item)} title="Edit"><Pencil size={15} /></IconBtn>
-                <IconBtn onClick={() => void handleDelete(item.id)} title="Delete"><Trash2 size={15} /></IconBtn>
+              <div className="admin-list-actions">
+                <IconBtn onClick={() => togglePublish(item)} title={item.is_published ? adminTr.unpublish : adminTr.publish}>{item.is_published ? <EyeOff size={15} /> : <Eye size={15} />}</IconBtn>
+                <IconBtn onClick={() => startEdit(item)} title={adminTr.edit}><Pencil size={15} /></IconBtn>
+                <IconBtn onClick={() => void handleDelete(item.id)} title={adminTr.delete}><Trash2 size={15} /></IconBtn>
               </div>
             </div>
           ))
@@ -167,10 +181,7 @@ export default function AdminEvents() {
 
 function IconBtn({ children, onClick, title }: { children: React.ReactNode; onClick: () => void; title: string }) {
   return (
-    <button type="button" title={title} onClick={onClick} style={{
-      width: '34px', height: '34px', borderRadius: '8px', border: '1px solid rgba(13,77,124,0.12)',
-      background: '#fff', color: 'var(--uid-navy)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
+    <button type="button" title={title} aria-label={title} onClick={onClick} className="admin-icon-btn focus-ring">
       {children}
     </button>
   );
