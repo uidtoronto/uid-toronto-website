@@ -398,7 +398,27 @@ Deno.serve(async (req) => {
         ...(user ? { user_id: user.id } : {}),
         ...(guest_checkout ? { guest_checkout: 'true' } : {}),
       },
+      ...(mode === 'subscription'
+        ? {
+            subscription_data: {
+              metadata: {
+                ...(member_id ? { member_id } : {}),
+              },
+            },
+          }
+        : {}),
     });
+
+    if (member_id) {
+      const { error: sessionLinkError } = await supabase
+        .from('members')
+        .update({ stripe_session_id: session.id, stripe_customer_id: customerId })
+        .eq('id', member_id);
+
+      if (sessionLinkError) {
+        console.error('Failed to link checkout session to member', sessionLinkError);
+      }
+    }
 
     console.log(`Created embedded checkout session ${session.id} for customer ${customerId}`);
 

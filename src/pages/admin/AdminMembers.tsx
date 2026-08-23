@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Loader2, Pencil, Search } from 'lucide-react';
+import { Loader2, Pencil, RefreshCw, Search } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { useAdminSuccess } from '../../context/AdminSuccessContext';
 import { useAdminEditorGuard } from '../../hooks/useAdminEditorGuard';
 import UnsavedChangesPrompt from '../../components/admin/UnsavedChangesPrompt';
-import { TextField, SelectField, StatusBadge } from '../../components/admin/AdminField';
+import { TextField, SelectField, StatusBadge, PaymentStatusBadge } from '../../components/admin/AdminField';
 import { ImageUpload } from '../../components/admin/ImageUpload';
 import { getAllMembers, getMemberById, updateMember } from '../../services/members';
+import { verifyMemberPayment } from '../../services/stripe';
 import { fullName } from '../../lib/memberUtils';
 import { adminTr, adminMembershipLabels, adminStatusLabels } from '../../lib/adminTr';
 import type { Member, MemberStatus, MemberUpdateInput, RegistrationMembershipType } from '../../types';
@@ -20,6 +21,7 @@ export default function AdminMembers() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<MemberUpdateInput>({});
   const [saving, setSaving] = useState(false);
+  const [syncingId, setSyncingId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
   const discardEdit = useCallback(() => { setEditingId(null); setIsDirty(false); }, []);
@@ -88,6 +90,25 @@ export default function AdminMembers() {
     setEditingId(null);
     setIsDirty(false);
     void load();
+  };
+
+  const handleSyncPayment = async (memberId: string) => {
+    setSyncingId(memberId);
+    const { paid, error } = await verifyMemberPayment(memberId);
+    setSyncingId(null);
+
+    if (error) {
+      toast(error, 'error');
+      return;
+    }
+
+    if (paid) {
+      toast(adminTr.paymentSynced, 'success');
+      void load();
+      return;
+    }
+
+    toast(adminTr.paymentNotFound, 'error');
   };
 
   return (
@@ -170,7 +191,22 @@ export default function AdminMembers() {
                 <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 600, color: 'var(--uid-navy)' }}>{fullName(m.first_name, m.last_name)}</p>
                 <p style={{ margin: '2px 0 0', fontFamily: "'DM Sans', sans-serif", fontSize: '12px', color: 'var(--text-soft)' }}>{m.email}</p>
               </div>
-              <StatusBadge status={m.status} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <StatusBadge status={m.status} />
+                {m.payment_status && <PaymentStatusBadge status={m.payment_status} />}
+              </div>
+              {m.payment_status === 'pending' && (
+                <button
+                  type="button"
+                  onClick={() => void handleSyncPayment(m.id)}
+                  disabled={syncingId === m.id}
+                  title={adminTr.syncPayment}
+                  aria-label={adminTr.syncPayment}
+                  className="admin-icon-btn focus-ring"
+                >
+                  {syncingId === m.id ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
+                </button>
+              )}
               <button type="button" onClick={() => void startEdit(m.id)} title={adminTr.edit} aria-label={adminTr.edit} className="admin-icon-btn focus-ring">
                 <Pencil size={15} />
               </button>

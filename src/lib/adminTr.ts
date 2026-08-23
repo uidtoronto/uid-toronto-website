@@ -165,6 +165,11 @@ export const adminTr = {
   postalCode: 'Posta kodu',
   country: 'Ülke',
   memberNotFound: 'Üye bulunamadı.',
+  paymentStatus: 'Ödeme durumu',
+  syncPayment: 'Stripe\'dan doğrula',
+  syncingPayment: 'Doğrulanıyor…',
+  paymentSynced: 'Ödeme Stripe\'dan senkronize edildi.',
+  paymentNotFound: 'Stripe\'da ödeme bulunamadı.',
 
   // Image upload defaults
   featuredImage: 'Öne çıkan görsel',

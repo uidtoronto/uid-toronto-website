@@ -1,7 +1,7 @@
 import { forwardRef, type InputHTMLAttributes, type SelectHTMLAttributes } from 'react';
-import type { MemberStatus } from '../../types';
+import type { MemberStatus, PaymentStatus } from '../../types';
 import { statusStyle } from '../../lib/memberUtils';
-import { adminStatusLabels } from '../../lib/adminTr';
+import { adminStatusLabels, adminPaymentStatusLabels } from '../../lib/adminTr';
 
 // Shared text/select input styling for admin forms — matches the brand.
 const baseField: React.CSSProperties = {
@@ -118,6 +118,28 @@ export function StatusBadge({ status }: { status: MemberStatus }) {
     }}>
       <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: s.dot, flexShrink: 0 }} />
       {adminStatusLabels[status] ?? s.label}
+    </span>
+  );
+}
+
+const PAYMENT_STATUS_STYLES: Record<PaymentStatus, { dot: string; bg: string; text: string }> = {
+  active: { dot: '#16a34a', bg: 'rgba(22,163,74,0.10)', text: '#15803d' },
+  pending: { dot: '#f59e0b', bg: 'rgba(245,158,11,0.10)', text: '#b45309' },
+  failed: { dot: '#dc2626', bg: 'rgba(220,38,38,0.10)', text: '#b91c1c' },
+  cancelled: { dot: '#94a3b8', bg: 'rgba(148,163,184,0.12)', text: '#64748b' },
+};
+
+export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
+  const s = PAYMENT_STATUS_STYLES[status] ?? PAYMENT_STATUS_STYLES.pending;
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: '6px',
+      padding: '3px 10px', borderRadius: '99px',
+      background: s.bg, color: s.text,
+      fontFamily: "'DM Sans', sans-serif", fontSize: '11.5px', fontWeight: 600,
+    }}>
+      <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: s.dot, flexShrink: 0 }} />
+      {adminPaymentStatusLabels[status] ?? status}
     </span>
   );
 }

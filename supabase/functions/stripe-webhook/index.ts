@@ -88,8 +88,17 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return;
   }
 
-  const memberId = session.metadata?.member_id ?? null;
+  let memberId = session.metadata?.member_id ?? null;
   const userId = session.metadata?.user_id ?? null;
+
+  if (!memberId && customerId) {
+    try {
+      const customer = await stripe.customers.retrieve(customerId);
+      memberId = customer.metadata?.memberId ?? customer.metadata?.member_id ?? null;
+    } catch (error) {
+      console.error('checkout.session.completed: customer metadata lookup failed', error);
+    }
+  }
   const paymentTimestamp = new Date().toISOString();
   const isSubscription = session.mode === 'subscription';
 
