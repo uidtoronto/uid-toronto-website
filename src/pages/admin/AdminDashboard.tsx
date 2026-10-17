@@ -1,22 +1,18 @@
 import { useEffect, useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { Users, UserPlus, TrendingUp, Loader2, CreditCard, Activity, CircleDollarSign } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { Users, UserPlus, TrendingUp, Loader2, CreditCard, Activity, CircleDollarSign, Wallet, Heart } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getMemberStats, getRecentMembers } from '../../services/members';
+import { getDashboardRevenueStats, formatCadCents } from '../../services/revenue';
 import { StatusBadge } from '../../components/admin/AdminField';
 import { fullName, formatRelative, STATUS_CHART_COLORS, statusStyle } from '../../lib/memberUtils';
 import { adminTr, adminMembershipLabels, adminStatusLabels, adminPaymentStatusLabels } from '../../lib/adminTr';
-import type { MemberStats, Member } from '../../types';
-
-const MEMBERSHIP_TYPE_COLORS: Record<string, string> = {
-  adult: '#004770',
-  student: '#00BAB0',
-  pensioner: '#f59e0b',
-};
+import type { MemberStats, Member, DashboardRevenueStats } from '../../types';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<MemberStats | null>(null);
+  const [revenue, setRevenue] = useState<DashboardRevenueStats | null>(null);
   const [recent, setRecent] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,11 +21,17 @@ export default function AdminDashboard() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [statsRes, recentRes] = await Promise.all([getMemberStats(), getRecentMembers(6)]);
+      const [statsRes, revenueRes, recentRes] = await Promise.all([
+        getMemberStats(),
+        getDashboardRevenueStats(),
+        getRecentMembers(6),
+      ]);
       if (cancelled) return;
       if (statsRes.error) { setError(statsRes.error); setLoading(false); return; }
+      if (revenueRes.error) { setError(revenueRes.error); setLoading(false); return; }
       if (recentRes.error) { setError(recentRes.error); setLoading(false); return; }
       setStats(statsRes.data);
+      setRevenue(revenueRes.data);
       setRecent(recentRes.data);
       setError(null);
       setLoading(false);
@@ -39,10 +41,6 @@ export default function AdminDashboard() {
 
   const statusChartData = stats
     ? stats.byStatus.filter(s => s.count > 0).map(s => ({ name: adminStatusLabels[s.status] ?? statusStyle(s.status).label, status: s.status, value: s.count }))
-    : [];
-
-  const typeChartData = stats
-    ? stats.byMembershipType.filter(t => t.count > 0).map(t => ({ name: adminMembershipLabels[t.type] ?? t.type, type: t.type, value: t.count }))
     : [];
 
   return (
@@ -70,10 +68,49 @@ export default function AdminDashboard() {
       ) : (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
-            <StatCard icon={<Users size={20} />} label={adminTr.totalMembers} value={stats?.total ?? 0} accent="navy" />
-            <StatCard icon={<TrendingUp size={20} />} label={adminTr.activeMembers} value={stats?.byStatus.find(s => s.status === 'active')?.count ?? 0} accent="teal" />
-            <StatCard icon={<UserPlus size={20} />} label={adminTr.pendingMembers} value={stats?.byStatus.find(s => s.status === 'pending')?.count ?? 0} accent="amber" />
-            <StatCard icon={<CreditCard size={20} />} label={adminTr.subscriptions} value={stats?.activeSubscriptions ?? 0} accent="navy" />
+            <StatCard icon={<Users size={20} />} label={adminTr.totalMembers} value={String(stats?.total ?? 0)} accent="navy" />
+            <StatCard icon={<TrendingUp size={20} />} label={adminTr.activeMembers} value={String(stats?.byStatus.find(s => s.status === 'active')?.count ?? 0)} accent="teal" />
+            <StatCard icon={<UserPlus size={20} />} label={adminTr.pendingMembers} value={String(stats?.byStatus.find(s => s.status === 'pending')?.count ?? 0)} accent="amber" />
+            <StatCard icon={<CreditCard size={20} />} label={adminTr.subscriptions} value={String(stats?.activeSubscriptions ?? 0)} accent="navy" />
+          </div>
+
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid rgba(13,77,124,0.07)', boxShadow: '0 4px 20px rgba(13,77,124,0.05)', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem' }}>
+              <Wallet size={18} color="var(--uid-teal-dark)" />
+              <h3 style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '15px', fontWeight: 600, color: 'var(--uid-navy)' }}>{adminTr.revenueOverview}</h3>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+              <RevenueCard
+                label={adminTr.mrr}
+                value={formatCadCents(revenue!.mrrCents)}
+                sub={adminTr.cadPerMonth}
+                accent="teal"
+              />
+              <RevenueCard
+                label={adminTr.arr}
+                value={formatCadCents(revenue!.arrCents)}
+                sub={adminTr.cadPerYear}
+                accent="navy"
+              />
+              <RevenueCard
+                label={adminTr.donationsThisMonth}
+                value={formatCadCents(revenue!.donationsThisMonthCents)}
+                sub={`${revenue!.donationsThisMonthCount} ${adminTr.donations.toLowerCase()}`}
+                accent="amber"
+                icon={<Heart size={16} />}
+              />
+              <RevenueCard
+                label={adminTr.donationsAllTime}
+                value={formatCadCents(revenue!.donationsTotalCents)}
+                sub={adminTr.finance}
+                accent="navy"
+                icon={<CircleDollarSign size={16} />}
+              />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem', marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(13,77,124,0.06)' }}>
+              <MiniStat label={adminTr.monthlySubscriptions} value={revenue!.activeMonthlySubs} />
+              <MiniStat label={adminTr.annualSubscriptions} value={revenue!.activeAnnualSubs} />
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '1.5rem', marginBottom: '1.5rem' }} className="admin-dash-grid">
@@ -138,43 +175,18 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1.5rem' }} className="admin-dash-grid">
-            <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid rgba(13,77,124,0.07)', boxShadow: '0 4px 20px rgba(13,77,124,0.05)' }}>
-              <h3 style={{ margin: '0 0 1rem', fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 600, color: 'var(--uid-navy)' }}>{adminTr.membersByType}</h3>
-              {typeChartData.length === 0 ? (
-                <p style={{ color: 'var(--text-soft)', fontSize: '13px', fontFamily: "'DM Sans', sans-serif" }}>{adminTr.noData}</p>
-              ) : (
-                <div style={{ height: 220 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={typeChartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(13,77,124,0.06)" />
-                      <XAxis dataKey="name" tick={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, fill: 'var(--text-mid)' }} axisLine={false} tickLine={false} />
-                      <YAxis allowDecimals tick={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, fill: 'var(--text-mid)' }} axisLine={false} tickLine={false} />
-                      <Tooltip
-                        contentStyle={{ borderRadius: '10px', border: '1px solid rgba(13,77,124,0.1)', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', boxShadow: '0 8px 24px rgba(13,77,124,0.12)' }}
-                      />
-                      <Bar dataKey="value" name={adminTr.members} radius={[8, 8, 0, 0]}>
-                        {typeChartData.map((d) => (
-                          <Cell key={d.type} fill={MEMBERSHIP_TYPE_COLORS[d.type] ?? '#004770'} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </div>
-
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }} className="admin-dash-grid">
             <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid rgba(13,77,124,0.07)', boxShadow: '0 4px 20px rgba(13,77,124,0.05)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
                 <CircleDollarSign size={16} color="var(--uid-teal-dark)" />
                 <h3 style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 600, color: 'var(--uid-navy)' }}>{adminTr.subscriptionStats}</h3>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
                 {stats!.byPaymentStatus.map(p => {
                   const label = adminPaymentStatusLabels[p.status] ?? p.status;
                   const color = p.status === 'active' ? '#16a34a' : p.status === 'pending' ? '#b45309' : p.status === 'failed' ? '#dc2626' : '#64748b';
                   return (
-                    <div key={p.status} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(13,77,124,0.05)' }}>
+                    <div key={p.status} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', borderRadius: '12px', background: 'rgba(13,77,124,0.03)', border: '1px solid rgba(13,77,124,0.06)' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: "'DM Sans', sans-serif", fontSize: '13px', color: 'var(--text-mid)' }}>
                         <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: color }} />
                         {label}
@@ -223,7 +235,7 @@ export default function AdminDashboard() {
   );
 }
 
-function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: number; accent: 'navy' | 'teal' | 'amber' }) {
+function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent: 'navy' | 'teal' | 'amber' }) {
   const colors = {
     navy: { bg: 'rgba(13,77,124,0.08)', fg: 'var(--uid-navy)' },
     teal: { bg: 'rgba(62,200,200,0.10)', fg: 'var(--uid-teal-dark)' },
@@ -244,6 +256,48 @@ function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label
       <p style={{ margin: 0, fontFamily: "'Cormorant Garamond', serif", fontSize: '36px', fontWeight: 500, color: 'var(--uid-navy)', lineHeight: 1 }}>
         {value}
       </p>
+    </div>
+  );
+}
+
+function RevenueCard({
+  label,
+  value,
+  sub,
+  accent,
+  icon,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  accent: 'navy' | 'teal' | 'amber';
+  icon?: React.ReactNode;
+}) {
+  const colors = {
+    navy: { bg: 'rgba(13,77,124,0.06)', border: 'rgba(13,77,124,0.1)', fg: 'var(--uid-navy)' },
+    teal: { bg: 'rgba(62,200,200,0.08)', border: 'rgba(62,200,200,0.2)', fg: 'var(--uid-teal-dark)' },
+    amber: { bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.18)', fg: '#b45309' },
+  }[accent];
+
+  return (
+    <div style={{ padding: '1.125rem 1.25rem', borderRadius: '14px', background: colors.bg, border: `1px solid ${colors.border}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '0.5rem' }}>
+        {icon && <span style={{ color: colors.fg, display: 'flex' }}>{icon}</span>}
+        <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '12px', fontWeight: 600, color: 'var(--text-mid)' }}>{label}</p>
+      </div>
+      <p style={{ margin: 0, fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(26px, 4vw, 32px)', fontWeight: 600, color: colors.fg, lineHeight: 1.1 }}>
+        {value}
+      </p>
+      <p style={{ margin: '0.35rem 0 0', fontFamily: "'DM Sans', sans-serif", fontSize: '11.5px', color: 'var(--text-soft)' }}>{sub}</p>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div style={{ padding: '0.75rem 1rem', borderRadius: '10px', background: 'rgba(13,77,124,0.03)', border: '1px solid rgba(13,77,124,0.06)' }}>
+      <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: '11.5px', color: 'var(--text-soft)' }}>{label}</p>
+      <p style={{ margin: '0.25rem 0 0', fontFamily: "'DM Sans', sans-serif", fontSize: '18px', fontWeight: 700, color: 'var(--uid-navy)' }}>{value}</p>
     </div>
   );
 }

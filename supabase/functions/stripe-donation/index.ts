@@ -10,7 +10,8 @@ const stripe = new Stripe(stripeSecret, {
 });
 
 const MIN_DONATION_CENTS = 500;
-const donationProductId = Deno.env.get('STRIPE_DONATION_PRODUCT_ID') ?? '';
+const donationProductId =
+  Deno.env.get('STRIPE_DONATION_PRODUCT_ID') ?? 'prod_V81zuGCuF8n6Fh';
 
 function resolveDonationProductId(): string | null {
   return donationProductId.startsWith('prod_') ? donationProductId : null;

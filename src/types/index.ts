@@ -227,6 +227,18 @@ export interface DonationStats {
   totalAmountCents: number;
 }
 
+export interface DashboardRevenueStats {
+  /** Monthly recurring revenue from active subscriptions (cents CAD) */
+  mrrCents: number;
+  /** Annual run rate = MRR × 12 (cents CAD) */
+  arrCents: number;
+  activeMonthlySubs: number;
+  activeAnnualSubs: number;
+  donationsThisMonthCents: number;
+  donationsTotalCents: number;
+  donationsThisMonthCount: number;
+}
+
 // ───────────────────────────────────────────────────────────
 // Board Members & Projects CMS
 // ───────────────────────────────────────────────────────────
