@@ -8,7 +8,7 @@ import { ArrowLeft, Loader2, ShieldCheck, CreditCard, Heart, Plus, X } from 'luc
 import { UIDLogo } from '../components/UIDLogo';
 import { useToast } from '../context/ToastContext';
 import { saveRegistration } from '../services/registration';
-import { PLANS, type PlanId } from '../services/stripe';
+import { PLANS, type PlanId, formatPlanPrice } from '../services/stripe';
 import { storePendingRegistrationCheckout } from '../lib/registrationCheckout';
 import type { FamilyMember } from '../types';
 
@@ -169,7 +169,7 @@ export default function Membership() {
                 {PLAN_LABELS[plan]}
               </p>
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', fontWeight: 400, color: 'rgba(255,255,255,0.72)', margin: 0 }}>
-                {activePlan.price} {activePlan.currency} / {PLAN_PERIOD[plan]}
+                {formatPlanPrice(activePlan)} / {PLAN_PERIOD[plan]}
               </p>
             </div>
             <Link

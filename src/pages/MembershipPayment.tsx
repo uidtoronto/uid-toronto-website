@@ -4,7 +4,7 @@ import { ArrowLeft, ShieldCheck, CreditCard } from 'lucide-react';
 import { UIDLogo } from '../components/UIDLogo';
 import { EmbeddedCheckoutPanel } from '../components/stripe/EmbeddedCheckoutPanel';
 import { getPendingRegistrationCheckout } from '../lib/registrationCheckout';
-import { PLANS, type PlanId, buildPaymentReturnUrl } from '../services/stripe';
+import { PLANS, type PlanId, buildPaymentReturnUrl, formatPlanPrice } from '../services/stripe';
 
 const PLAN_LABELS: Record<PlanId, string> = {
   monthly: 'Aylık Üyelik',
@@ -75,7 +75,7 @@ export default function MembershipPayment() {
               {PLAN_LABELS[plan]}
             </p>
             <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', color: '#fff', margin: 0 }}>
-              {activePlan.currency} ${activePlan.price}
+              {formatPlanPrice(activePlan)}
               <span style={{ fontSize: '13px', fontFamily: "'DM Sans', sans-serif", color: 'rgba(255,255,255,0.55)', marginLeft: '4px' }}>
                 /{plan === 'monthly' ? 'Ay' : 'Yıl'}
               </span>

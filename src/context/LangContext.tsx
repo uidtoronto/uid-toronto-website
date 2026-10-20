@@ -52,8 +52,8 @@ const translations = {
       subtitle: 'Toplumumuzun geleceğine katkı sağlayın ve UID Toronto ailesinin bir parçası olun.',
       monthly: {
         name: 'Aylık Üyelik',
-        price: '$20',
-        period: 'CAD / Ay',
+        price: 'CA$10',
+        period: '/ Ay',
         cta: 'Aylık Üye Ol',
         features: [
           'UID Toronto resmi üyeliği',
@@ -65,8 +65,8 @@ const translations = {
       },
       yearly: {
         name: 'Yıllık Üyelik',
-        price: '$240',
-        period: 'CAD / Yıl',
+        price: 'CA$120',
+        period: '/ Yıl',
         badge: 'En Çok Tercih Edilen',
         cta: 'Yıllık Üye Ol',
         features: [
@@ -201,8 +201,8 @@ const translations = {
       subtitle: 'Contribute to the future of our community and become part of the UID Toronto family.',
       monthly: {
         name: 'Monthly Membership',
-        price: '$20',
-        period: 'CAD / Month',
+        price: 'CA$10',
+        period: '/ Month',
         cta: 'Join Monthly',
         features: [
           'Official UID Toronto membership',
@@ -214,8 +214,8 @@ const translations = {
       },
       yearly: {
         name: 'Annual Membership',
-        price: '$240',
-        period: 'CAD / Year',
+        price: 'CA$120',
+        period: '/ Year',
         badge: 'Most Popular',
         cta: 'Join Annually',
         features: [

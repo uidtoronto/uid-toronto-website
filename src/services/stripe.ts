@@ -31,6 +31,15 @@ export const PLANS: Record<PlanId, PlanInfo> = Object.fromEntries(
   ]),
 ) as Record<PlanId, PlanInfo>;
 
+/** Live-facing membership price label, e.g. CA$10 or CA$120 */
+export function formatPlanPrice(plan: Pick<PlanInfo, 'price'>): string {
+  const amount = plan.price.toLocaleString('en-CA', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+  return `CA$${amount}`;
+}
+
 export function buildPaymentReturnUrl(params: {
   memberId?: string;
   plan?: PlanId;
