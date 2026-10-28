@@ -6,7 +6,7 @@
 
 /** UID Toronto Stripe products (public IDs — safe as fallbacks). */
 const DEFAULT_PRODUCT_MONTHLY = 'prod_Ut6W4153T8CLbe';
-const DEFAULT_PRODUCT_ANNUAL = 'prod_Ut6XpPqYZD0iFn';
+const DEFAULT_PRODUCT_ANNUAL = 'prod_VSYVesFie8tTBq';
 
 function read(key: keyof ImportMetaEnv): string | undefined {
   const value = import.meta.env[key];

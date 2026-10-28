@@ -148,9 +148,11 @@ export interface FamilyMember {
   id?: string;
   member_id?: string;
   full_name: string;
+  birth_date?: string | null;
   age?: number | null;
   gender?: 'male' | 'female' | null;
   member_type?: 'adult' | 'child' | null;
+  selected_programs?: string[];
   created_at?: string;
 }
 

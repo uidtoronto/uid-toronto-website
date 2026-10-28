@@ -5,8 +5,8 @@ import type { DashboardRevenueStats } from '../types';
 const MONTHLY_PLAN = STRIPE_PRODUCTS.find((p) => p.id === 'monthly');
 const ANNUAL_PLAN = STRIPE_PRODUCTS.find((p) => p.id === 'annual');
 
-const MONTHLY_PRICE_CENTS = Math.round((MONTHLY_PLAN?.price ?? 20) * 100);
-const ANNUAL_MRR_CENTS = Math.round(((ANNUAL_PLAN?.price ?? 240) / 12) * 100);
+const MONTHLY_PRICE_CENTS = Math.round((MONTHLY_PLAN?.price ?? 10) * 100);
+const ANNUAL_MRR_CENTS = Math.round(((ANNUAL_PLAN?.price ?? 120) / 12) * 100);
 
 function startOfCurrentMonth(): string {
   const d = new Date();

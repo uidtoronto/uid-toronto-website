@@ -37,9 +37,11 @@ function splitFullName(fullName: string): { first_name: string; last_name: strin
 
 interface FamilyMemberInput {
   full_name: string;
+  birth_date?: string | null;
   age?: number | null;
   gender?: 'male' | 'female' | null;
   member_type?: 'adult' | 'child' | null;
+  selected_programs?: string[] | null;
 }
 
 Deno.serve(async (req) => {
@@ -102,14 +104,23 @@ Deno.serve(async (req) => {
     }
 
     if (is_family && members.length > 0) {
+      for (const fm of members) {
+        if (!fm.full_name?.trim()) continue;
+        if (!fm.birth_date || typeof fm.birth_date !== 'string') {
+          return corsResponse({ error: 'Her aile üyesi için doğum tarihi gereklidir.' }, 400);
+        }
+      }
+
       const rows = members
         .filter((fm: FamilyMemberInput) => fm.full_name?.trim())
         .map((fm: FamilyMemberInput) => ({
           member_id: member.id,
           full_name: fm.full_name.trim(),
+          birth_date: fm.birth_date ?? null,
           age: fm.age ?? null,
           gender: fm.gender ?? null,
           member_type: fm.member_type ?? null,
+          selected_programs: Array.isArray(fm.selected_programs) ? fm.selected_programs : [],
         }));
 
       if (rows.length > 0) {

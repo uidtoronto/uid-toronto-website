@@ -4,20 +4,19 @@ import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Loader2, ShieldCheck, CreditCard, Heart, Plus, X } from 'lucide-react';
+import { ArrowLeft, Loader2, ShieldCheck, CreditCard, Heart, Plus } from 'lucide-react';
 import { UIDLogo } from '../components/UIDLogo';
 import { useToast } from '../context/ToastContext';
 import { saveRegistration } from '../services/registration';
 import { PLANS, type PlanId, formatPlanPrice } from '../services/stripe';
 import { storePendingRegistrationCheckout } from '../lib/registrationCheckout';
+import { isBirthDateInFuture } from '../lib/familyPrograms';
+import {
+  FamilyMemberCard,
+  emptyFamilyMember,
+  type FamilyMemberFormState,
+} from '../components/membership/FamilyMemberCard';
 import type { FamilyMember } from '../types';
-
-const familyMemberSchema = z.object({
-  full_name: z.string().min(1, 'Ad soyad gereklidir'),
-  age: z.coerce.number().int().min(0).max(120).optional(),
-  gender: z.enum(['male', 'female']).optional(),
-  member_type: z.enum(['adult', 'child']).optional(),
-});
 
 const membershipSchema = z.object({
   full_name: z.string().min(2, 'Ad soyad gereklidir'),
@@ -27,7 +26,6 @@ const membershipSchema = z.object({
 });
 
 type MembershipForm = z.infer<typeof membershipSchema>;
-type FamilyMemberForm = z.infer<typeof familyMemberSchema>;
 
 const PLAN_LABELS: Record<PlanId, string> = {
   monthly: 'Aylık Üyelik',
@@ -53,7 +51,7 @@ export default function Membership() {
   const activePlan = plan ? PLANS[plan] : null;
   const [submitting, setSubmitting] = useState(false);
   const [isFamily, setIsFamily] = useState(false);
-  const [familyMembers, setFamilyMembers] = useState<FamilyMemberForm[]>([]);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMemberFormState[]>([]);
 
   useEffect(() => {
     if (!plan) {
@@ -70,15 +68,9 @@ export default function Membership() {
     defaultValues: { full_name: '', email: '', birth_date: '', mobile_phone: '' },
   });
 
-  const updateFamilyMember = (index: number, field: keyof FamilyMemberForm, value: string | number) => {
-    setFamilyMembers(prev =>
-      prev.map((fm, i) => (i === index ? { ...fm, [field]: value } : fm)),
-    );
-  };
-
   const addFamilyMember = () => {
     if (familyMembers.length >= 10) return;
-    setFamilyMembers(prev => [...prev, { full_name: '', age: undefined, gender: undefined, member_type: undefined }]);
+    setFamilyMembers(prev => [...prev, emptyFamilyMember()]);
   };
 
   const removeFamilyMember = (index: number) => {
@@ -94,14 +86,21 @@ export default function Membership() {
         toast('Lütfen en az bir aile üyesi ekleyin veya Hayır seçeneğini işaretleyin.', 'error');
         return;
       }
-      const parsed = z.array(familyMemberSchema).safeParse(validMembers);
-      if (!parsed.success) {
-        toast('Lütfen tüm aile üyeleri için gerekli alanları doldurun.', 'error');
+      const missingBirthDate = validMembers.some(fm => !fm.birth_date);
+      if (missingBirthDate) {
+        toast('Her aile üyesi için doğum tarihi zorunludur.', 'error');
         return;
       }
-      const incomplete = familyMembers.some(fm => fm.full_name.trim() !== '' && !fm.member_type);
-      if (incomplete) {
-        toast('Lütfen her aile üyesi için ilişki türünü (Yetişkin/Çocuk) seçin.', 'error');
+      const invalidBirthDate = validMembers.some(fm => isBirthDateInFuture(fm.birth_date));
+      if (invalidBirthDate) {
+        toast('Doğum tarihi gelecekte olamaz.', 'error');
+        return;
+      }
+      const missingClassification = validMembers.some(
+        fm => fm.age === undefined || !fm.member_type,
+      );
+      if (missingClassification) {
+        toast('Geçerli bir doğum tarihi girin.', 'error');
         return;
       }
     }
@@ -115,7 +114,20 @@ export default function Membership() {
         mobile_phone: values.mobile_phone,
         plan,
         is_family: isFamily,
-        family_members: isFamily ? familyMembers.filter(fm => fm.full_name.trim() !== '') as FamilyMember[] : [],
+        family_members: isFamily
+          ? familyMembers
+              .filter(fm => fm.full_name.trim() !== '')
+              .map(
+                (fm): FamilyMember => ({
+                  full_name: fm.full_name.trim(),
+                  birth_date: fm.birth_date,
+                  age: fm.age ?? null,
+                  gender: fm.gender ?? null,
+                  member_type: fm.member_type ?? null,
+                  selected_programs: fm.program_ids,
+                }),
+              )
+          : [],
       });
 
       if (regRes.error) {
@@ -230,7 +242,10 @@ export default function Membership() {
                     Aile Bilgileri
                   </p>
                 </div>
-                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-mid)', fontWeight: 300, marginBottom: '1rem', lineHeight: 1.6 }}>
+                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-mid)', fontWeight: 300, marginBottom: '0.75rem', lineHeight: 1.65 }}>
+                  Aile üyelerinizi ücretsiz olarak ekleyebilir ve UID Toronto etkinliklerinden haberdar olmalarını sağlayabilirsiniz.
+                </p>
+                <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '14px', color: 'var(--text-mid)', fontWeight: 500, marginBottom: '1rem', lineHeight: 1.6 }}>
                   Ailenizden başka üyeler eklemek istiyor musunuz?
                 </p>
                 <div style={{ display: 'flex', gap: '1.25rem', marginBottom: '1.25rem' }}>
@@ -249,68 +264,16 @@ export default function Membership() {
                 {isFamily && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {familyMembers.map((fm, i) => (
-                      <div key={i} className="family-row" style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'minmax(0, 2fr) 0.7fr 1fr 1fr 32px',
-                        gap: '0.625rem',
-                        alignItems: 'flex-end',
-                        padding: '0.875rem',
-                        borderRadius: '12px',
-                        background: 'rgba(13,77,124,0.03)',
-                        border: '1px solid rgba(13,77,124,0.06)',
-                      }}>
-                        <Field label={i === 0 ? 'Ad Soyad' : ''} compact>
-                          <input
-                            value={fm.full_name}
-                            onChange={e => updateFamilyMember(i, 'full_name', e.target.value)}
-                            className="reg-input"
-                            placeholder="Ad Soyad"
-                          />
-                        </Field>
-                        <Field label={i === 0 ? 'Yaş' : ''} compact>
-                          <input
-                            type="number"
-                            value={fm.age ?? ''}
-                            onChange={e => updateFamilyMember(i, 'age', e.target.value === '' ? 0 : parseInt(e.target.value, 10))}
-                            className="reg-input"
-                            placeholder="Yaş"
-                          />
-                        </Field>
-                        <Field label={i === 0 ? 'Cinsiyet' : ''} compact>
-                          <select
-                            value={fm.gender ?? ''}
-                            onChange={e => updateFamilyMember(i, 'gender', e.target.value)}
-                            className="reg-input"
-                          >
-                            <option value="">Seçin…</option>
-                            <option value="male">Erkek</option>
-                            <option value="female">Kadın</option>
-                          </select>
-                        </Field>
-                        <Field label={i === 0 ? 'İlişki' : ''} compact>
-                          <select
-                            value={fm.member_type ?? ''}
-                            onChange={e => updateFamilyMember(i, 'member_type', e.target.value)}
-                            className="reg-input"
-                          >
-                            <option value="">Seçin…</option>
-                            <option value="adult">Yetişkin</option>
-                            <option value="child">Çocuk</option>
-                          </select>
-                        </Field>
-                        <button
-                          type="button"
-                          onClick={() => removeFamilyMember(i)}
-                          aria-label="Aile üyesini kaldır"
-                            style={{
-                              width: '32px', height: '38px', borderRadius: '8px', border: 'none',
-                              background: 'rgba(220,38,38,0.08)', color: '#dc2626', cursor: 'pointer',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            }}
-                          >
-                            <X size={15} />
-                          </button>
-                      </div>
+                      <FamilyMemberCard
+                        key={i}
+                        index={i}
+                        member={fm}
+                        showHeaderLabels={i === 0}
+                        onChange={next =>
+                          setFamilyMembers(prev => prev.map((row, idx) => (idx === i ? next : row)))
+                        }
+                        onRemove={() => removeFamilyMember(i)}
+                      />
                     ))}
                     {familyMembers.length < 10 && (
                       <button
@@ -375,9 +338,14 @@ export default function Membership() {
         }
         .reg-input:focus { border-color: var(--uid-teal); box-shadow: 0 0 0 3px rgba(62,200,200,0.15); }
         .reg-input:disabled { background: rgba(13,77,124,0.04); color: var(--text-mid); }
-        .family-row { grid-template-columns: minmax(0,2fr) 0.7fr 1fr 1fr 32px !important; }
+        .family-member-card-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1fr) auto;
+          gap: 0.625rem;
+          align-items: flex-end;
+        }
         @media (max-width: 640px) {
-          .family-row { grid-template-columns: 1fr 1fr !important; }
+          .family-member-card-grid { grid-template-columns: 1fr; align-items: stretch; }
         }
       `}</style>
     </div>

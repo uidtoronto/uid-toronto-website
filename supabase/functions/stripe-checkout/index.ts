@@ -13,6 +13,28 @@ const stripe = new Stripe(stripeSecret, {
 
 const REGISTRATION_CHECKOUT_WINDOW_MS = 60 * 60 * 1000;
 
+/** Public product/price IDs — override via Supabase secrets when needed. */
+const DEFAULT_PRODUCT_MONTHLY = 'prod_Ut6W4153T8CLbe';
+const DEFAULT_PRODUCT_ANNUAL = 'prod_VSYVesFie8tTBq';
+const DEFAULT_PRICE_MONTHLY = 'price_1URWe6QL2YOOfEUQvWhySnuP';
+const DEFAULT_PRICE_ANNUAL = 'price_1URdOYQL2YOOfEUQjrx5DCRu';
+
+/** Must match VITE_STRIPE_PRODUCT_MONTHLY when set (Supabase secret). */
+const stripeProductMonthly = Deno.env.get('STRIPE_PRODUCT_MONTHLY') ?? DEFAULT_PRODUCT_MONTHLY;
+/** CA$10/mo Price ID — overrides product default_price resolution. */
+const stripeRecurringPriceMonthly =
+  Deno.env.get('STRIPE_RECURRING_PRICE_MONTHLY') ?? DEFAULT_PRICE_MONTHLY;
+/** Pick active monthly price with this unit_amount (cents CAD) if price ID not used. */
+const stripeMonthlyAmountCents = Deno.env.get('STRIPE_MONTHLY_AMOUNT_CENTS') ?? '1000';
+
+/** Must match VITE_STRIPE_PRODUCT_ANNUAL when set (Supabase secret). */
+const stripeProductAnnual = Deno.env.get('STRIPE_PRODUCT_ANNUAL') ?? DEFAULT_PRODUCT_ANNUAL;
+/** CA$120/yr Price ID — overrides product default_price for annual checkout. */
+const stripeRecurringPriceAnnual =
+  Deno.env.get('STRIPE_RECURRING_PRICE_ANNUAL') ?? DEFAULT_PRICE_ANNUAL;
+/** Pick active yearly price with this unit_amount (cents CAD) if price ID not used. */
+const stripeAnnualAmountCents = Deno.env.get('STRIPE_ANNUAL_AMOUNT_CENTS') ?? '12000';
+
 function corsResponse(body: string | object | null, status = 200) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -117,6 +139,22 @@ async function resolveRecurringPriceFromProduct(productId: string): Promise<stri
     throw new Error('product_id must be a Stripe Product ID (prod_...)');
   }
 
+  if (
+    stripeRecurringPriceMonthly.startsWith('price_') &&
+    stripeProductMonthly.startsWith('prod_') &&
+    productId === stripeProductMonthly
+  ) {
+    return stripeRecurringPriceMonthly;
+  }
+
+  if (
+    stripeRecurringPriceAnnual.startsWith('price_') &&
+    stripeProductAnnual.startsWith('prod_') &&
+    productId === stripeProductAnnual
+  ) {
+    return stripeRecurringPriceAnnual;
+  }
+
   const product = await stripe.products.retrieve(productId, { expand: ['default_price'] });
   const defaultPrice = product.default_price;
 
@@ -135,8 +173,38 @@ async function resolveRecurringPriceFromProduct(productId: string): Promise<stri
     product: productId,
     active: true,
     type: 'recurring',
-    limit: 1,
+    limit: 20,
   });
+
+  if (prices.data.length === 0) {
+    throw new Error(`No active recurring price found for product ${productId}`);
+  }
+
+  const isMonthlyProduct =
+    stripeProductMonthly.startsWith('prod_') && productId === stripeProductMonthly;
+  if (isMonthlyProduct) {
+    const targetCents = Number.parseInt(stripeMonthlyAmountCents, 10);
+    if (Number.isFinite(targetCents) && targetCents > 0) {
+      const match = prices.data.find(
+        (price) =>
+          price.unit_amount === targetCents && price.recurring?.interval === 'month',
+      );
+      if (match) return match.id;
+    }
+  }
+
+  const isAnnualProduct =
+    stripeProductAnnual.startsWith('prod_') && productId === stripeProductAnnual;
+  if (isAnnualProduct) {
+    const targetCents = Number.parseInt(stripeAnnualAmountCents, 10);
+    if (Number.isFinite(targetCents) && targetCents > 0) {
+      const match = prices.data.find(
+        (price) =>
+          price.unit_amount === targetCents && price.recurring?.interval === 'year',
+      );
+      if (match) return match.id;
+    }
+  }
 
   const recurringPrice = prices.data[0]?.id;
   if (!recurringPrice) {
